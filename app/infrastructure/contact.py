@@ -1,6 +1,8 @@
 from dataclasses import dataclass
 
+
 @dataclass
 class Contact:
-    address: str
-    
+    contact_id: str
+    approved: bool
+    awaiting_approval: bool

@@ -6,15 +6,23 @@ import socket
 import socks
 from threading import Thread
 import socketserver
+from abc import ABC, abstractmethod
 
 from app.networking.base import ConnectionSettings, NetworkIO, Packet
 from app.shared.helpful_abstractions import Closable
 
 
+class PacketHandler(ABC):
+    @abstractmethod
+    def handle(self, packet: Packet):
+        pass
+
+
 class TorServer(Thread, Closable):
-    def __init__(self, connection_settings: ConnectionSettings):
+    def __init__(self, connection_settings: ConnectionSettings, handler: PacketHandler):
         super().__init__()
         self._connection_settings = connection_settings
+        self._handler = handler
         self._tcp_server: socketserver.ThreadingTCPServer = socketserver.ThreadingTCPServer(self._connection_settings.to_tuple(), TorRequestHandler)
 
     def run(self):
@@ -24,6 +32,9 @@ class TorServer(Thread, Closable):
         
     def close(self):
         self._tcp_server.shutdown()
+
+    def get_handler(self):
+        return self._handler
 
 
 class TorClient(Thread, Closable):
@@ -37,6 +48,10 @@ class TorClient(Thread, Closable):
 
     def close(self):
         self._socket.close()
+
+    def send(self, packet: Packet):
+        address = packet.address.to_tuple()
+        self._socket.sendto(packet.data, address)
 
     def _create_socket(self) -> socket.socket:
         socket.socket = socks.socksocket
@@ -76,6 +91,19 @@ class TorService(Thread, Closable):
         print('Service established at %s.onion' % response.service_id)
 
 
+class BaseRequestHandleStrategy(ABC):
+    def __init__(self, packet: Packet):
+        self._packet: Packet = packet
+
+    @abstractmethod
+    def handle(self):
+        pass
+
+
 class TorRequestHandler(socketserver.BaseRequestHandler):
     def handle(self):
-        print(self.client_address)
+        handler = self.server.get_handler()
+        connection, address = self.request, self.client_address
+        # TODO: make it handle any size received
+        data = connection.recv(65536)
+        handler.handle(Packet(data, ConnectionSettings.from_tuple(address)))
