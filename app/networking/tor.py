@@ -18,12 +18,17 @@ class PacketHandler(ABC):
         pass
 
 
+class HandleableThreadingTCPServer(socketserver.ThreadingTCPServer):
+    def __init__(self, address, requestHandler, packetHandler):
+        super().__init__(address, requestHandler)
+        self._packet_handler = packetHandler
+
+
 class TorServer(Thread, Closable):
     def __init__(self, connection_settings: ConnectionSettings, handler: PacketHandler):
         super().__init__()
         self._connection_settings = connection_settings
-        self._handler = handler
-        self._tcp_server: socketserver.ThreadingTCPServer = socketserver.ThreadingTCPServer(self._connection_settings.to_tuple(), TorRequestHandler)
+        self._tcp_server: socketserver.ThreadingTCPServer = HandleableThreadingTCPServer(self._connection_settings.to_tuple(), TorRequestHandler, handler)
 
     def run(self):
         server_thread = Thread(target=self._tcp_server.serve_forever)
@@ -32,9 +37,6 @@ class TorServer(Thread, Closable):
         
     def close(self):
         self._tcp_server.shutdown()
-
-    def get_handler(self):
-        return self._handler
 
 
 class TorClient(Thread, Closable):
@@ -52,7 +54,7 @@ class TorClient(Thread, Closable):
         self._socket.close()
 
     def send(self):
-        self._socket.sendto(self._packet.data, self._packet.address.to_tuple())
+        self._socket.send(self._packet.data)
 
     def _create_socket(self) -> socket.socket:
         socket.socket = socks.socksocket
@@ -82,7 +84,7 @@ class TorService(Thread, Closable):
             self._tor.terminate()
 
     def _start_hidden_service(self):
-        self._tor = launch_tor_with_config(tor_cmd='D:\\Programming\\tor-win32-0.4.4.5\\Tor\\tor.exe', config = {
+        self._tor = launch_tor_with_config(tor_cmd='D:\\Programming\\tor-win32-0.4.4.5\\Tor\\tor.exe', init_msg_handler=print, config = {
             'ControlPort': '9051'
         })
         self._controller = Controller.from_port()
@@ -94,7 +96,7 @@ class TorService(Thread, Closable):
 
 class TorRequestHandler(socketserver.BaseRequestHandler):
     def handle(self):
-        handler = self.server.get_handler()
+        handler = self.server._packet_handler
         connection, address = self.request, self.client_address
         # TODO: make it handle any size received
         data = connection.recv(65536)
