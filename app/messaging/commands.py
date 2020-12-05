@@ -1,6 +1,6 @@
+from __future__ import annotations
 from dataclasses import dataclass, InitVar, field
 from dataclasses_json import dataclass_json
-from __future__ import annotations
 from abc import ABC, abstractmethod
 from re import search
 from typing import Any, Dict, List, Tuple

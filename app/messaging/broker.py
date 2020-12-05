@@ -19,6 +19,7 @@ class Payload:
 
 class Broker(PacketHandler, Thread):
     def __init__(self, command_mapper: CommandMapper, command_handler: BaseCommandHandler):
+        super().__init__()
         self._send_queue = Queue()
         self._recv_queue = Queue()
         self._command_mapper = command_mapper
