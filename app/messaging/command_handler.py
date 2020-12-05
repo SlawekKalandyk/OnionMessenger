@@ -1,22 +1,20 @@
 from __future__ import annotations
 from typing import Any, Dict, Iterable, Optional
 from dataclasses import dataclass
+from abc import ABC, abstractmethod
 
 from app.messaging.commands import Command, CommandMapper
-from app.networking.base import ConnectionSettings, Packet
-from app.networking.tor import BaseRequestHandleStrategy, PacketHandler
 
-@dataclass(frozen=True)
-class Payload:
-    '''Command + information where to send it.'''
-    command: Command
-    # pylint: disable=unsubscriptable-object
-    address: Optional[ConnectionSettings]
-    
+class BaseCommandHandler(ABC):
+    @abstractmethod
+    def handle(self, command: Command) -> Iterable[Command]:
+        pass
 
-class CommandHandler:
-    def __init__(self):
+
+class CommandHandler(BaseCommandHandler):
+    def __init__(self, command_mapper: CommandMapper):
         self._registered_types: Dict[type, Any] = dict()
+        self._command_mapper = command_mapper
 
     def register(self, command_type: type, receiver: Any) -> CommandHandler:
         if receiver is None:
@@ -24,14 +22,12 @@ class CommandHandler:
         self._registered_types[command_type] = receiver
         return self
 
-    def handle(self, payload: Payload) -> Iterable[Payload]:
-        command, address = payload.command, payload.address
-
+    def handle(self, command: Command) -> Iterable[Command]:
         receiver = self._get_receiver(command)
-        responses = command.invoke(receiver)
+        responses: Iterable[Command] = command.invoke(receiver)
         if responses:
             for response in responses:
-                yield Payload(response, address)
+                yield response
 
     # pylint: disable=unsubscriptable-object
     def _get_receiver(self, command: Command) -> Optional[Any]:
