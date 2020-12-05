@@ -2,7 +2,7 @@ from abc import abstractmethod, ABC
 from dataclasses import dataclass
 from dataclasses_json import dataclass_json
 from typing import Optional
-
+from socketserver import ThreadingTCPServer
 
 @dataclass_json
 @dataclass(frozen=True)
@@ -24,15 +24,13 @@ class Packet:
     address: ConnectionSettings
 
 
-class NetworkIO(ABC):
+class PacketHandler(ABC):
     @abstractmethod
-    def send(self, packet: Packet):
+    def handle(self, packet: Packet):
         pass
 
-    @abstractmethod
-    def receive(self) -> Optional[Packet]:
-        pass
 
-    @abstractmethod
-    def get_address(self) -> ConnectionSettings:
-        pass
+class HandleableThreadingTCPServer(ThreadingTCPServer):
+    def __init__(self, address, requestHandler, packetHandler):
+        super().__init__(address, requestHandler)
+        self._packet_handler = packetHandler

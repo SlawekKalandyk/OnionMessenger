@@ -6,8 +6,8 @@ from dataclasses import dataclass
 
 from app.messaging.commands import CommandMapper, Command
 from app.messaging.command_handler import BaseCommandHandler
-from app.networking.tor import PacketHandler, TorClient
-from app.networking.base import Packet, ConnectionSettings
+from app.networking.tor import TorClient
+from app.networking.base import ConnectionSettings, Packet, PacketHandler
 
 
 @dataclass(frozen=True)

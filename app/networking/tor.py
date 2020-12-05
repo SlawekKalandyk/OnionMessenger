@@ -8,20 +8,9 @@ from threading import Thread
 import socketserver
 from abc import ABC, abstractmethod
 
-from app.networking.base import ConnectionSettings, NetworkIO, Packet
+from app.networking.base import ConnectionSettings, Packet, PacketHandler, HandleableThreadingTCPServer
 from app.shared.helpful_abstractions import Closable
-
-
-class PacketHandler(ABC):
-    @abstractmethod
-    def handle(self, packet: Packet):
-        pass
-
-
-class HandleableThreadingTCPServer(socketserver.ThreadingTCPServer):
-    def __init__(self, address, requestHandler, packetHandler):
-        super().__init__(address, requestHandler)
-        self._packet_handler = packetHandler
+from app.shared.config import Configuration
 
 
 class TorServer(Thread, Closable):
@@ -84,13 +73,18 @@ class TorService(Thread, Closable):
             self._tor.terminate()
 
     def _start_hidden_service(self):
-        self._tor = launch_tor_with_config(tor_cmd='D:\\Programming\\tor-win32-0.4.4.5\\Tor\\tor.exe', init_msg_handler=print, config = {
+        self._tor = launch_tor_with_config(tor_cmd=Configuration.get_tor_executable_path(), init_msg_handler=print, config = {
             'ControlPort': '9051'
         })
         self._controller = Controller.from_port()
         self._controller.authenticate()
-        response = self._controller.create_ephemeral_hidden_service(ports={39123: self._connection_settings.port}, await_publication=True, \
-            key_type='ED25519-V3', key_content='ELvn4pIOL/kjVKF3e8lNxv8dU/XTam/9t3y+Ipq7+0d79Cepd/vzro7W5P1CqYtCVaD9iNTifzVIjfSqo+GyUw==')
+        key = Configuration.get_hidden_service_key()
+        key_type = 'ED25519-V3' if key else 'NEW'
+        key_content = key if key else 'ED25519-V3'
+        response = self._controller.create_ephemeral_hidden_service(ports={Configuration.get_tor_server_port(): self._connection_settings.port}, await_publication=True, \
+            key_type=key_type, key_content=key_content)
+        if not key:
+            Configuration.save_hidden_service_key(response.private_key)
         print('Service established at %s.onion' % response.service_id)
 
 
