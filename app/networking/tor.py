@@ -38,20 +38,21 @@ class TorServer(Thread, Closable):
 
 
 class TorClient(Thread, Closable):
-    def __init__(self, connection_settings: ConnectionSettings):
+    def __init__(self, packet: Packet):
         super().__init__()
-        self._connection_settings = connection_settings
+        self._packet = packet
         self._socket = self._create_socket()
 
     def run(self):
         self._connect()
+        self.send()
+        self.close()
 
     def close(self):
         self._socket.close()
 
-    def send(self, packet: Packet):
-        address = packet.address.to_tuple()
-        self._socket.sendto(packet.data, address)
+    def send(self):
+        self._socket.sendto(self._packet.data, self._packet.address.to_tuple())
 
     def _create_socket(self) -> socket.socket:
         socket.socket = socks.socksocket
@@ -61,7 +62,7 @@ class TorClient(Thread, Closable):
         return s
 
     def _connect(self):
-        self._socket.connect(self._connection_settings.to_tuple())
+        self._socket.connect(self._packet.address.to_tuple())
 
 
 class TorService(Thread, Closable):
@@ -89,15 +90,6 @@ class TorService(Thread, Closable):
         response = self._controller.create_ephemeral_hidden_service(ports={39123: self._connection_settings.port}, await_publication=True, \
             key_type='ED25519-V3', key_content='ELvn4pIOL/kjVKF3e8lNxv8dU/XTam/9t3y+Ipq7+0d79Cepd/vzro7W5P1CqYtCVaD9iNTifzVIjfSqo+GyUw==')
         print('Service established at %s.onion' % response.service_id)
-
-
-class BaseRequestHandleStrategy(ABC):
-    def __init__(self, packet: Packet):
-        self._packet: Packet = packet
-
-    @abstractmethod
-    def handle(self):
-        pass
 
 
 class TorRequestHandler(socketserver.BaseRequestHandler):
