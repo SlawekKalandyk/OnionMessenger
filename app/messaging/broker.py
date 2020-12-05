@@ -12,7 +12,6 @@ from app.networking.base import Packet, ConnectionSettings
 
 @dataclass(frozen=True)
 class Payload:
-    '''Command + information where to send it.'''
     command: Command
     address: ConnectionSettings
 
@@ -29,7 +28,6 @@ class Broker(PacketHandler, Thread):
         while True:
             self._handle_incoming()
             self._handle_outgoing()
-            sleep(0.01)
 
     def handle(self, packet: Packet):
         payload = Payload(self._command_mapper.map_from_bytes(packet.data), packet.address)
@@ -39,14 +37,14 @@ class Broker(PacketHandler, Thread):
         self._send_queue.put(payload)
 
     def _handle_outgoing(self):
-        while self._send_queue.not_empty:
+        while not self._send_queue.empty():
             payload = self._send_queue.get()
             packet = Packet(self._command_mapper.map_to_bytes(payload.command), payload.address)
             client = TorClient(packet)
             client.start()
 
     def _handle_incoming(self):
-        while self._recv_queue.not_empty:
+        while not self._recv_queue.empty():
             payload: Payload = self._recv_queue.get()
             command, address = payload.command, payload.address
             responses: Iterable[Command] = self._command_handler.handle(command)
