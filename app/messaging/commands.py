@@ -5,28 +5,12 @@ from abc import ABC, abstractmethod
 from re import search
 from typing import Any, Dict, List, Tuple
 
-from app.networking.base import ConnectionSettings
 from app.infrastructure.message import ContentType
-
-
-@dataclass(frozen=False)
-class CommandContext:
-    sender_address: ConnectionSettings = None
-    local_address: ConnectionSettings = None
-
-    def initialize(self,
-                   sender_address: ConnectionSettings,
-                   local_address: ConnectionSettings):
-        self.sender_address = sender_address
-        self.local_address = local_address
 
 
 @dataclass_json
 @dataclass(frozen=True)
 class Command(ABC):
-    context: InitVar[CommandContext] = field(default=CommandContext(),
-                                             init=False)
-
     @classmethod
     @abstractmethod
     def get_identifier(cls) -> str:
