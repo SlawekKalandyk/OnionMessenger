@@ -4,21 +4,12 @@ from dataclasses_json import dataclass_json
 from abc import ABC, abstractmethod
 from re import search
 from typing import Any, Dict, List, Tuple
+import datetime
 
-from app.infrastructure.message import ContentType
-
-
-@dataclass_json
-@dataclass(frozen=True)
-class Command(ABC):
-    @classmethod
-    @abstractmethod
-    def get_identifier(cls) -> str:
-        pass
-
-    @abstractmethod
-    def invoke(self, receiver: Any) -> List[Command]:
-        pass
+from app.messaging.base import Command
+from app.messaging.receivers import MessageCommandReceiver, HelloCommandReceiver, ApproveCommandReceiver
+from app.infrastructure.message import ContentType, MessageAuthor, MessageState, Message
+from app.infrastructure.contact import Contact
 
 
 class CommandMapper:
@@ -65,11 +56,13 @@ class MessageCommand(Command):
     def get_identifier(cls) -> str:
         return 'MESSAGE'
 
-    # def invoke(self, receiver: DBSession) -> List[Command]:
-    #     # check if sender_address is in approved
-    #     # if it is, save message
-    #     # else ignore it
-    #     raise NotImplementedError
+    def invoke(self, receiver: MessageCommandReceiver) -> List[Command]:
+        contact = receiver.contact_repository.get_by_id(self.source)
+        if contact and contact.approved:
+            message = Message(interlocutor=contact, content=self.content, content_type=self.content_type, \
+                timestamp=datetime.datetime.now(), message_author=MessageAuthor.INTERLOCUTOR, message_state=MessageState.RECEIVED)
+            receiver.message_repository.add(message)
+        return []
 
 
 @dataclass_json
@@ -79,12 +72,10 @@ class HelloCommand(Command):
     def get_identifier(cls) -> str:
         return 'HELLO'
 
-    # def invoke(self, receiver: DBSession) -> List[Command]:
-    #     # new_contact = Contact(sender_onion_address, False, True)
-    #     # receiver.Contactsadd()
-    #     # return []
-
-    #     raise NotImplementedError
+    def invoke(self, receiver: HelloCommandReceiver) -> List[Command]:
+        new_contact = Contact(contact_id=self.source, approved=False, awaiting_approval=True, address=self.source)
+        receiver.contact_repository.add(new_contact)
+        return []
 
 
 @dataclass_json
@@ -96,11 +87,10 @@ class ApproveCommand(Command):
     def get_identifier(cls) -> str:
         return 'APPROVE'
 
-    # def invoke(self, receiver: DBSession) -> List[Command]:
-    #     # contact = receiver.Contacts.where(c => c.contact_id == sender_onion_address)
-    #     # contact.approved = self.approved
-    #     # contact.awaiting_approval = False
-    #     # receiver.update(contact)
-    #     # return []
-
-    #     raise NotImplementedError
+    def invoke(self, receiver: ApproveCommandReceiver) -> List[Command]:
+        contact = receiver.contact_repository.get_by_id(self.source)
+        contact = contact if contact else Contact(contact_id=self.source, address=self.source)
+        contact.approved = self.approved
+        contact.awaiting_approval = False
+        receiver.update(contact)
+        return []
