@@ -5,6 +5,7 @@ from peewee import Field, ForeignKeyField, BlobField, TimestampField
 
 from app.infrastructure.contact import Contact
 from app.infrastructure.database import BaseModel
+from app.shared.helpful_abstractions import Singleton
 
 
 class MessageState(Enum):
@@ -14,7 +15,7 @@ class MessageState(Enum):
 
 class MessageAuthor(Enum):
     SELF = 1
-    INTEROLOCUTOR = 2
+    INTERLOCUTOR = 2
 
 
 class ContentType(Enum):
@@ -59,3 +60,8 @@ class Message(BaseModel):
     timestamp = TimestampField
     message_author = MessageAuthorField()
     message_state = MessageStateField()
+
+
+class MessageRepository(metaclass=Singleton):
+    def add(self, message: Message):
+        message.save()
