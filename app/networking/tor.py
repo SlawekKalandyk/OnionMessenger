@@ -85,6 +85,8 @@ class TorService(Thread, Closable):
             key_type=key_type, key_content=key_content)
         if not key:
             TorConfiguration.save_hidden_service_key(response.private_key)
+            TorConfiguration.save_hidden_service_id(response.service_id)
+            
         print('Service established at %s.onion' % response.service_id)
 
 

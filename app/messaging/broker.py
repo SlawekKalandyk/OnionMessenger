@@ -8,6 +8,7 @@ from app.messaging.commands import CommandMapper, Command
 from app.messaging.command_handler import BaseCommandHandler
 from app.networking.tor import TorClient
 from app.networking.base import ConnectionSettings, Packet, PacketHandler
+from app.shared.config import TorConfiguration
 
 
 @dataclass(frozen=True)
@@ -38,7 +39,8 @@ class Broker(PacketHandler, Thread):
 
     def _handle_outgoing(self):
         while not self._send_queue.empty():
-            payload = self._send_queue.get()
+            payload: Payload = self._send_queue.get()
+            payload.command.source = TorConfiguration.get_hidden_service_id()
             packet = Packet(self._command_mapper.map_to_bytes(payload.command), payload.address)
             client = TorClient(packet)
             client.start()
