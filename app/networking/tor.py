@@ -10,7 +10,7 @@ from abc import ABC, abstractmethod
 
 from app.networking.base import ConnectionSettings, Packet, PacketHandler, HandleableThreadingTCPServer
 from app.shared.helpful_abstractions import Closable
-from app.shared.config import Configuration
+from app.shared.config import TorConfiguration
 
 
 class TorServer(Thread, Closable):
@@ -73,18 +73,18 @@ class TorService(Thread, Closable):
             self._tor.terminate()
 
     def _start_hidden_service(self):
-        self._tor = launch_tor_with_config(tor_cmd=Configuration.get_tor_executable_path(), init_msg_handler=print, config = {
+        self._tor = launch_tor_with_config(tor_cmd=TorConfiguration.get_tor_executable_path(), init_msg_handler=print, config = {
             'ControlPort': '9051'
         })
         self._controller = Controller.from_port()
         self._controller.authenticate()
-        key = Configuration.get_hidden_service_key()
+        key = TorConfiguration.get_hidden_service_key()
         key_type = 'ED25519-V3' if key else 'NEW'
         key_content = key if key else 'ED25519-V3'
-        response = self._controller.create_ephemeral_hidden_service(ports={Configuration.get_tor_server_port(): self._connection_settings.port}, await_publication=True, \
+        response = self._controller.create_ephemeral_hidden_service(ports={TorConfiguration.get_tor_server_port(): self._connection_settings.port}, await_publication=True, \
             key_type=key_type, key_content=key_content)
         if not key:
-            Configuration.save_hidden_service_key(response.private_key)
+            TorConfiguration.save_hidden_service_key(response.private_key)
         print('Service established at %s.onion' % response.service_id)
 
 

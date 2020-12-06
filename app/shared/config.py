@@ -1,8 +1,18 @@
 import os
 import platform
 
-class Configuration:
+class BaseConfiguration:
     app_local_data_directory = 'OnionMessenger'
+
+    @staticmethod
+    def _get_local_app_full_path():
+        if platform.system() == 'Windows':
+            local_app_data = os.getenv('LOCALAPPDATA')
+            return os.path.join(local_app_data, BaseConfiguration.app_local_data_directory)
+        raise OSNotSupportedError()
+
+class TorConfiguration(BaseConfiguration):
+    
     key_file_name = 'key'
 
     @staticmethod
@@ -15,27 +25,25 @@ class Configuration:
 
     @staticmethod
     def save_hidden_service_key(key: str):
-        if not os.path.exists(Configuration._get_local_app_full_path()):
-            os.makedirs(Configuration._get_local_app_full_path())
+        if not os.path.exists(TorConfiguration._get_local_app_full_path()):
+            os.makedirs(TorConfiguration._get_local_app_full_path())
 
-        with open(os.path.join(Configuration._get_local_app_full_path(), Configuration.key_file_name), 'w+') as key_file:
+        with open(os.path.join(TorConfiguration._get_local_app_full_path(), TorConfiguration.key_file_name), 'w+') as key_file:
             key_file.write(key)
             
     @staticmethod
     def get_hidden_service_key():
-        if not os.path.exists(os.path.join(Configuration._get_local_app_full_path(), Configuration.key_file_name)):
+        if not os.path.exists(os.path.join(TorConfiguration._get_local_app_full_path(), TorConfiguration.key_file_name)):
             return None
         
-        with open(os.path.join(Configuration._get_local_app_full_path(), Configuration.key_file_name), 'r') as key_file:
+        with open(os.path.join(TorConfiguration._get_local_app_full_path(), TorConfiguration.key_file_name), 'r') as key_file:
             return key_file.readline()
 
-    @staticmethod
-    def _get_local_app_full_path():
-        if platform.system() == 'Windows':
-            local_app_data = os.getenv('LOCALAPPDATA')
-            return os.path.join(local_app_data, Configuration.app_local_data_directory)
-        raise OSNotSupportedError()
-        
 
 class OSNotSupportedError(Exception):
     pass
+
+class DatabaseConfiguration(BaseConfiguration):
+    @staticmethod
+    def get_database_path():
+        pass
