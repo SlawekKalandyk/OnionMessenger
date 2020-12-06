@@ -1,5 +1,4 @@
 from queue import Queue
-from threading import Thread
 from time import sleep
 from typing import Iterable
 from dataclasses import dataclass
@@ -9,6 +8,7 @@ from app.messaging.command_handler import BaseCommandHandler
 from app.networking.tor import TorClient
 from app.networking.base import ConnectionSettings, Packet, PacketHandler
 from app.shared.config import TorConfiguration
+from app.shared.multithreading import StoppableThread
 
 
 @dataclass(frozen=True)
@@ -17,7 +17,7 @@ class Payload:
     address: ConnectionSettings
 
 
-class Broker(PacketHandler, Thread):
+class Broker(PacketHandler, StoppableThread):
     def __init__(self, command_mapper: CommandMapper, command_handler: BaseCommandHandler):
         super().__init__()
         self._send_queue = Queue()

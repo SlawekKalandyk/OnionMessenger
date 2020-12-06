@@ -11,9 +11,10 @@ from abc import ABC, abstractmethod
 from app.networking.base import ConnectionSettings, Packet, PacketHandler, HandleableThreadingTCPServer
 from app.shared.helpful_abstractions import Closable
 from app.shared.config import TorConfiguration
+from app.shared.multithreading import StoppableThread
 
 
-class TorServer(Thread, Closable):
+class TorServer(StoppableThread, Closable):
     def __init__(self, connection_settings: ConnectionSettings, handler: PacketHandler):
         super().__init__()
         self._connection_settings = connection_settings
@@ -28,7 +29,7 @@ class TorServer(Thread, Closable):
         self._tcp_server.shutdown()
 
 
-class TorClient(Thread, Closable):
+class TorClient(StoppableThread, Closable):
     def __init__(self, packet: Packet):
         super().__init__()
         self._packet = packet
@@ -56,7 +57,7 @@ class TorClient(Thread, Closable):
         self._socket.connect(self._packet.address.to_tuple())
 
 
-class TorService(Thread, Closable):
+class TorService(StoppableThread, Closable):
     def __init__(self, connection_settings: ConnectionSettings):
         super().__init__()
         self._connection_settings = connection_settings
