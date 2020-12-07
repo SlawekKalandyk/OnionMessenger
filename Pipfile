@@ -11,6 +11,9 @@ dataclasses-json = "*"
 pylint = "*"
 pysocks = "*"
 peewee = "*"
+flask = "*"
+pyinstaller = "*"
+flask-restful = "*"
 
 [requires]
 python_version = "3.9"
