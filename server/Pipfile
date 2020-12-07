@@ -14,6 +14,7 @@ peewee = "*"
 flask = "*"
 pyinstaller = "*"
 flask-restful = "*"
+flask-cors = "*"
 
 [requires]
 python_version = "3.9"
