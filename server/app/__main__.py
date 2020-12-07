@@ -5,8 +5,7 @@ from app.messaging.command_handler import CommandHandler
 from app.messaging.broker import Broker
 from app.api.endpoints import app
 
-
-if __name__ == '__main__':
+def main():
     # server_settings = ConnectionSettings('127.0.0.1', 39122)
     # command_mapper = CommandMapper()
     # command_mapper.register(TestCommand)
@@ -19,3 +18,7 @@ if __name__ == '__main__':
     # tor_service = TorService(server_settings)
     # tor_service.start()
     app.run(debug=True)
+
+
+if __name__ == '__main__':
+    main()

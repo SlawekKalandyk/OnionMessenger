@@ -129,6 +129,4 @@ dmypy.json
 .pyre/
 
 .vscode/
-/build
-/dist
-*.spec
+/appbuild
