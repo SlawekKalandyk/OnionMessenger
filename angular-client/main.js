@@ -1,17 +1,41 @@
 'use strict';
 
-const { app, BrowserWindow } = require('electron')
-const url = require("url");
-const path = require("path")
-const tree_kill = require("tree-kill");
+const { app, BrowserWindow } = require('electron');
+const url = require('url');
+const path = require('path');
+const tree_kill = require('tree-kill');
+const find_process = require('find-process');
+const psList = require('ps-list');
+const PY_DIST_FOLDER = 'dist';
+const EXEC_NAME = 'OnionMessengerServer'
 
 let mainWindow;
 var pid;
 
+
+const isNotPackaged = () => {
+    const fullPath = path.join(__dirname, 'src')
+    return require('fs').existsSync(fullPath)
+}
+
+function getExecNameWithExtension() {
+    if (process.platform === 'win32') {
+        return EXEC_NAME + '.exe';
+    }
+}
+
+function getServerExecPath() {
+    if (isNotPackaged()) {
+        return path.join(__dirname, PY_DIST_FOLDER, getExecNameWithExtension());
+    } else {
+        return path.join(process.resourcesPath, 'app', PY_DIST_FOLDER, getExecNameWithExtension());
+    }
+}
+
 function createWindow() {
     mainWindow = new BrowserWindow({
-        width: 800,
-        height: 600,
+        width: 1024,
+        height: 768,
         show: false,
         webPreferences: {
             nodeIntegration: true
@@ -22,37 +46,38 @@ function createWindow() {
 
     mainWindow.loadURL(
         url.format({
-            pathname: path.join(__dirname, `/dist/angular-client/index.html`),
-            protocol: "file:",
+            pathname: path.join(__dirname, PY_DIST_FOLDER, 'angular-client', 'index.html'),
+            protocol: 'file:',
             slashes: true
         })
     );
 
-    var executablePath = '../appbuild/dist/OnionMessenger.exe';
+    var executablePath = getServerExecPath();
     var child = require('child_process').spawn(executablePath);
     pid = child.pid;
+
     mainWindow.on('closed', function () {
-        mainWindow = null
-        tree_kill(pid);
+        mainWindow = null;
     });
 }
 
 app.on('ready', createWindow);
 
-app.on('window-all-closed', function () {
+app.on('window-all-closed', async () => {console.log('before');
+    const procs = await psList();
+
     if (process.platform !== 'darwin')
-        app.quit()
+        app.quit();
+
+    procs.filter(function (proc) {
+        return proc.name === getExecNameWithExtension();
+    })
+    .forEach(item => {
+        tree_kill(item.pid);
+    })
 });
 
 app.on('activate', function () {
     if (mainWindow === null)
         createWindow()
 });
-
-app.on('quit', function () {
-    tree_kill(pid);
-});
-
-app.once('before-quit', () => {
-    mainWindow.removeAllListeners('close');
-}); 

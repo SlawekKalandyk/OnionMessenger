@@ -1,4 +1,4 @@
-SERVER_DIST_NAME = OnionMessenger
+SERVER_DIST_NAME = OnionMessengerServer
 APP_BUILD_DIR = ../appbuild
 
 .PHONY: publish
