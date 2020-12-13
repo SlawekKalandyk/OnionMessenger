@@ -74,7 +74,7 @@ class TorService(StoppableThread, Closable):
             self._tor.terminate()
 
     def _start_hidden_service(self):
-        self._tor = launch_tor_with_config(tor_cmd=TorConfiguration.get_tor_executable_path(), init_msg_handler=print, config = {
+        self._tor = launch_tor_with_config(tor_cmd=TorConfiguration.get_tor_executable_path(), config = {
             'ControlPort': '9051'
         })
         self._controller = Controller.from_port()

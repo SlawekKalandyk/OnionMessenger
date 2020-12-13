@@ -3,22 +3,25 @@ from app.networking.base import ConnectionSettings
 from app.messaging.commands import CommandMapper
 from app.messaging.command_handler import CommandHandler
 from app.messaging.broker import Broker
-from app.api.endpoints import app
+from app.shared.container import InstanceContainer
+from app.api.endpoints import flaskapp
 
 def main():
-    # server_settings = ConnectionSettings('127.0.0.1', 39122)
+    # server_settings = ConnectionSettings('127.0.0.1', 39124)
     # command_mapper = CommandMapper()
-    # command_mapper.register(TestCommand)
     # command_handler = CommandHandler(command_mapper)
-    # command_handler.register(TestCommand, 1)
     # broker = Broker(command_mapper, command_handler)
     # broker.start()
     # tor_server = TorServer(server_settings, broker)
     # tor_server.start()
     # tor_service = TorService(server_settings)
     # tor_service.start()
-    app.run(debug=True)
+    
+    # InstanceContainer.register_singleton(Broker, broker)
+    # InstanceContainer.register_singleton(TorServer, tor_server)
+    # InstanceContainer.register_singleton(TorService, tor_service)
 
+    flaskapp.run(debug=False)
 
 if __name__ == '__main__':
     main()

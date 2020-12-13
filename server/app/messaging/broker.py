@@ -29,6 +29,7 @@ class Broker(PacketHandler, StoppableThread):
         while True:
             self._handle_incoming()
             self._handle_outgoing()
+            sleep(0.01)
 
     def handle(self, packet: Packet):
         payload = Payload(self._command_mapper.map_from_bytes(packet.data), packet.address)

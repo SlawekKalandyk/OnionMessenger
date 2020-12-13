@@ -63,7 +63,7 @@ function createWindow() {
 
 app.on('ready', createWindow);
 
-app.on('window-all-closed', async () => {console.log('before');
+app.on('window-all-closed', async () => {
     const procs = await psList();
 
     if (process.platform !== 'darwin')
@@ -74,7 +74,11 @@ app.on('window-all-closed', async () => {console.log('before');
     })
     .forEach(item => {
         tree_kill(item.pid);
-    })
+    });
+});
+
+app.on('before-quit', function() {
+    app.removeAllListeners('close');
 });
 
 app.on('activate', function () {

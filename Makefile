@@ -8,12 +8,9 @@ buildpy:
 
 .PHONY: run-electron
 run-electron:
-	$(MAKE) buildpy
 	$(MAKE) -C $(CLIENT_DIR_NAME) run-electron
 
 .PHONY: build-all
 build-all:
 	$(MAKE) buildpy
 	$(MAKE) -C $(CLIENT_DIR_NAME) prodbuild
-	cp ./appbuild/dist/$(SERVER_DIST_NAME).exe ./$(CLIENT_DIR_NAME)/dist
-	$(MAKE) -C $(CLIENT_DIR_NAME) package-electron
