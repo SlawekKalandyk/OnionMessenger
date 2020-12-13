@@ -23,5 +23,11 @@ class ContactRepository(metaclass=Singleton):
     def get_by_id(self, id: str):
         return Contact.get_or_none(Contact.contact_id == id)
 
+    def get_all(self):
+        return [x for x in Contact.select().dicts()]
+
     def update(self, contact: Contact):
-        contact.update()
+        contact.save()
+
+    def remove(self, contact: Contact):
+        Contact.delete_instance(contact.contact_id)

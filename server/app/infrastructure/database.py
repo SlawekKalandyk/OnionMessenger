@@ -3,7 +3,7 @@ from peewee import Model, SqliteDatabase
 from app.shared.config import DatabaseConfiguration
 from app.shared.helpful_abstractions import Singleton
 
-class DatabaseContext(metaclass=Singleton):
+class DatabaseContext():
     def __init__(self):
         self._database = SqliteDatabase(DatabaseConfiguration.get_database_path(), pragmas={\
             'journal_mode': 'wal',\
@@ -18,6 +18,12 @@ class DatabaseContext(metaclass=Singleton):
     def create_tables_if_not_exist(self, tables):
         self._database.create_tables(tables)
 
+    def connect_to_database(self):
+        self._database.connect()
+        return self
+
+    def close(self):
+        self._database.close()
 
 class BaseModel(Model):
     class Meta:
