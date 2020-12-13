@@ -13,8 +13,8 @@ pysocks = "*"
 peewee = "*"
 flask = "*"
 pyinstaller = "*"
-flask-restful = "*"
 flask-cors = "*"
+marshmallow = "*"
 
 [requires]
 python_version = "3.9"

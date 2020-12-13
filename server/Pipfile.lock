@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "ee3d67adc6695ad6fb1b1b362fc646173dd9c1aa61e19f85647eb78b31a6a310"
+            "sha256": "67a0c9849f886b60c024ade89b8dc2525910dca0cd6c8644fd383941c3d45e2b"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -22,13 +22,6 @@
                 "sha256:c623e5f3408ca61d4016f23a681b9adb100802ca3e3da5e718915a9e4052cebe"
             ],
             "version": "==0.17"
-        },
-        "aniso8601": {
-            "hashes": [
-                "sha256:246bf8d3611527030889e6df970878969d3a2f760ba3eb694fa1fb10e6ce53f9",
-                "sha256:51047d4fb51d7b8afd522b70f2d21a1b2487cbb7f7bd84ea852e9aa7808e7704"
-            ],
-            "version": "==8.1.0"
         },
         "astroid": {
             "hashes": [
@@ -77,14 +70,6 @@
             ],
             "index": "pypi",
             "version": "==3.0.9"
-        },
-        "flask-restful": {
-            "hashes": [
-                "sha256:5ea9a5991abf2cb69b4aac19793faac6c032300505b325687d7c305ffaa76915",
-                "sha256:d891118b951921f1cec80cabb4db98ea6058a35e6404788f9e70d5b243813ec2"
-            ],
-            "index": "pypi",
-            "version": "==0.3.8"
         },
         "future": {
             "hashes": [
@@ -188,7 +173,7 @@
                 "sha256:73facc37462dfc0b27f571bdaffbef7709e19f7a616beb3802ea425b07843f4e",
                 "sha256:e26763201474b588d144dae9a32bdd945cd26a06c943bc746a6882e850475378"
             ],
-            "markers": "python_version >= '3.5'",
+            "index": "pypi",
             "version": "==3.9.1"
         },
         "marshmallow-enum": {
@@ -256,13 +241,6 @@
             ],
             "index": "pypi",
             "version": "==1.7.1"
-        },
-        "pytz": {
-            "hashes": [
-                "sha256:3e6b7dd2d1e0a59084bcee14a17af60c5c562cdc16d828e8eba2e683d3a7e268",
-                "sha256:5c55e189b682d420be27c6995ba6edce0c0a77dd67bfbe2ae6607134d5851ffd"
-            ],
-            "version": "==2020.4"
         },
         "pywin32-ctypes": {
             "hashes": [
