@@ -147,6 +147,8 @@ def approve_contact_for_further_communication(id):
     payload = Payload(command, address)
     broker.send(payload)
 
+    return {}, 204
+
 
 @flaskapp.route("/api/messages/", methods=["POST"])
 def send_message():
@@ -164,3 +166,5 @@ def send_message():
     address = ConnectionSettings((message.interlocutor.address, TorConfiguration.get_tor_server_port()))
     payload = Payload(command, address)
     broker.send(payload)
+
+    return {}, 204
