@@ -1,24 +1,23 @@
 from dataclasses import dataclass
 from datetime import datetime
-from enum import Enum
-from peewee import Field, ForeignKeyField, BlobField, TimestampField
+from enum import Enum, IntEnum
+from peewee import Field, ForeignKeyField, TextField, TimestampField
 
 from app.infrastructure.contact import Contact
 from app.infrastructure.database import BaseModel
 from app.shared.helpful_abstractions import Singleton
 
-
-class MessageState(Enum):
+class MessageState(IntEnum):
     SENT = 1
     RECEIVED = 2
 
 
-class MessageAuthor(Enum):
+class MessageAuthor(IntEnum):
     SELF = 1
     INTERLOCUTOR = 2
 
 
-class ContentType(Enum):
+class ContentType(IntEnum):
     STRING = 1
     IMAGE = 2
     
@@ -55,9 +54,9 @@ class ContentTypeField(Field):
 
 class Message(BaseModel):
     interlocutor = ForeignKeyField(Contact, backref='messages')
-    content = BlobField()
+    content = TextField()
     content_type = ContentTypeField()
-    timestamp = TimestampField
+    timestamp = TimestampField()
     message_author = MessageAuthorField()
     message_state = MessageStateField()
 
