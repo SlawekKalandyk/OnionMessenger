@@ -1,0 +1,7 @@
+<div class="contact-container">
+    <div class="contact-name">
+        {{contact.name}}
+    </div>
+    <div [ngClass]="contact.online.valueOf() === 2 ? 'contact-undetermined' : contact.online.valueOf() === 0 ? 'contact-online' : 'contact-offline'">
+    </div>
+</div>

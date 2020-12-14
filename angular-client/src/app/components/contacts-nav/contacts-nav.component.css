@@ -1,0 +1,32 @@
+.contacts-nav-container {
+    display: flex;
+    width: 100%;
+    justify-content: space-between;
+}
+
+.contacts-title {
+    font-size: large;
+}
+
+.contacts-add-button-div {
+    margin-top: 8px;
+    margin-right: 6px;
+    flex: 0 1 auto;
+}
+
+.current-contact-highlight {
+    background-color: skyblue;
+}
+
+.contact-card {
+    width: 100%;
+}
+
+.mat-mini-fab {
+    background-color: rgb(101, 160, 236);
+}
+
+.mat-list-item:hover {
+    background-color: skyblue;
+    cursor: pointer;
+}

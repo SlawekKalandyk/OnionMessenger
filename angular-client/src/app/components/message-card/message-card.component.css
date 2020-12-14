@@ -1,0 +1,40 @@
+.sent-message-container {
+    width: 100% - 5px;
+    margin-right: 5px;
+    margin-left: 5px;
+    margin-bottom: 5px;
+    margin-left: auto;
+}
+
+.received-message-container {
+    width: 100% - 5px;
+    margin-right: 5px;
+    margin-left: 5px;
+    margin-bottom: 5px;
+    margin-right: auto;
+}
+
+.sent-message {
+    max-width: 60%;
+    text-align: right;
+    margin-left: auto;
+    background-color: lightgray;
+}
+
+.received-message {
+    max-width: 60%;
+    text-align: left;
+    margin-right: auto;
+}
+
+.sent-message-timestamp {
+    text-align: right;
+    font-size: small;
+    color: gray;
+}
+
+.received-message-timestamp {
+    text-align: left;
+    font-size: small;
+    color: gray;
+}

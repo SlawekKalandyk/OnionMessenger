@@ -1,0 +1,27 @@
+.contact-container {
+    display: flex;
+    width: 100%;
+    justify-content: space-between;
+}
+
+.contact-name {
+    width: 95%;
+    flex: 0 1 auto;
+}
+.contact-undetermined {
+    background-color: yellow;
+    flex: 0 1 auto;
+    width: 5%;
+}
+
+.contact-online {
+    background-color: greenyellow;
+    flex: 0 1 auto;
+    width: 5%;
+}
+
+.contact-offline {
+    background-color: red;
+    flex: 0 1 auto;
+    width: 5%;
+}

@@ -1,0 +1,8 @@
+<div [ngClass]="message.message_state.valueOf() === 1 ? 'sent-message-container' : 'received-message-container'">
+    <div [ngClass]="message.message_state.valueOf() === 1 ? 'sent-message-timestamp' : 'received-message-timestamp'">
+        {{timestamp}}
+    </div>
+    <mat-card [ngClass]="message.message_state.valueOf() === 1 ? 'sent-message' : 'received-message'">
+        {{content}}
+    </mat-card>
+</div>
