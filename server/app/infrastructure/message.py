@@ -26,7 +26,7 @@ class MessageStateField(Field):
     field_type = 'integer'
     
     def db_value(self, value: MessageState):
-        return value.value
+        return value
 
     def python_value(self, value: int):
         return MessageState(value)
@@ -36,7 +36,7 @@ class MessageAuthorField(Field):
     field_type = 'integer'
     
     def db_value(self, value: MessageAuthor):
-        return value.value
+        return value
 
     def python_value(self, value: int):
         return MessageAuthor(value)
@@ -46,7 +46,7 @@ class ContentTypeField(Field):
     field_type = 'integer'
     
     def db_value(self, value: ContentType):
-        return value.value
+        return value
 
     def python_value(self, value: int):
         return ContentType(value)
