@@ -22,8 +22,8 @@ class ContactSchema(Schema):
 class MessageSchema(Schema):
     __model__ = Message
 
-    contact = fields.Nested(ContactSchema())
-    content = BytesField()
+    interlocutor = fields.Nested(ContactSchema())
+    content = fields.Str()
     content_type = fields.Int()
     timestamp = fields.DateTime()
     message_author = fields.Int()
