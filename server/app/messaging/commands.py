@@ -1,15 +1,15 @@
 from __future__ import annotations
-from dataclasses import dataclass, InitVar, field
+from dataclasses import dataclass
 from dataclasses_json import dataclass_json
-from abc import ABC, abstractmethod
 from re import search
-from typing import Any, Dict, List, Tuple
+from typing import Dict, List, Tuple
 import datetime
 
 from app.messaging.base import Command
 from app.messaging.receivers import MessageCommandReceiver, HelloCommandReceiver, ApproveCommandReceiver
 from app.infrastructure.message import ContentType, MessageAuthor, MessageState, Message
 from app.infrastructure.contact import Contact
+from app.messaging.socket_emitter import emit_message, emit_contact
 
 
 class CommandMapper:
@@ -62,6 +62,7 @@ class MessageCommand(Command):
             message = Message(interlocutor=contact, content=self.content, content_type=self.content_type, \
                 timestamp=datetime.datetime.now(), message_author=MessageAuthor.INTERLOCUTOR, message_state=MessageState.RECEIVED)
             receiver.message_repository.add(message)
+            emit_message(message)
         return []
 
 

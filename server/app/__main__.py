@@ -4,7 +4,8 @@ from app.messaging.commands import CommandMapper
 from app.messaging.command_handler import CommandHandler
 from app.messaging.broker import Broker
 from app.shared.container import InstanceContainer
-from app.api.endpoints import flaskapp
+from app.api.endpoints import flaskapp, socketIO
+from flask_socketio import SocketIO
 
 def main():
     # server_settings = ConnectionSettings('127.0.0.1', 39124)
@@ -20,8 +21,9 @@ def main():
     # InstanceContainer.register_singleton(Broker, broker)
     # InstanceContainer.register_singleton(TorServer, tor_server)
     # InstanceContainer.register_singleton(TorService, tor_service)
-
-    flaskapp.run(debug=False)
+    InstanceContainer.register_singleton(SocketIO, socketIO)
+    
+    socketIO.run(flaskapp)
 
 if __name__ == '__main__':
     main()

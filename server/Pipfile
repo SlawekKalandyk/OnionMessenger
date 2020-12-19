@@ -15,6 +15,7 @@ flask = "*"
 pyinstaller = "*"
 flask-cors = "*"
 marshmallow = "*"
+flask-socketio = "*"
 
 [requires]
 python_version = "3.9"

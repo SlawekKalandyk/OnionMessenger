@@ -1,9 +1,11 @@
 from flask import Flask, g, request, jsonify
 from flask_cors import CORS
+from flask_socketio import SocketIO
 from marshmallow import ValidationError
 
 from app.messaging.broker import Broker, Payload
 from app.messaging.commands import ApproveCommand, MessageCommand
+from app.messaging.socket_emitter import emit_contact, emit_message
 from app.shared.container import InstanceContainer
 from app.shared.config import TorConfiguration
 from app.networking.base import ConnectionSettings
@@ -15,12 +17,14 @@ from app.api.schemas import ContactSchema, MessageSchema
 
 flaskapp = Flask(__name__)
 CORS(flaskapp)
+socketIO = SocketIO(flaskapp, cors_allowed_origins="*")
 
 contact_schema = ContactSchema()
 contacts_schema = ContactSchema(many=True)
 
 message_schema = MessageSchema()
 messages_schema = MessageSchema(many=True)
+
 
 def get_and_connect_to_database() -> DatabaseContext:
     database = getattr(g, '_database', None) 
@@ -65,6 +69,8 @@ def add_contact():
         return {}, 409
     
     repository.add(contact)
+    emit_contact(contact)
+    
     return contact_json, 201
 
 
@@ -141,11 +147,11 @@ def approve_contact_for_further_communication(id):
     contact.awaiting_approval = False
     repository.update(contact)
 
-    broker = InstanceContainer.resolve(Broker)
-    command = ApproveCommand(is_approved)
-    address = ConnectionSettings((contact.address, TorConfiguration.get_tor_server_port()))
-    payload = Payload(command, address)
-    broker.send(payload)
+    # broker = InstanceContainer.resolve(Broker)
+    # command = ApproveCommand(is_approved)
+    # address = ConnectionSettings((contact.address, TorConfiguration.get_tor_server_port()))
+    # payload = Payload(command, address)
+    # broker.send(payload)
 
     return {}, 204
 
@@ -153,6 +159,7 @@ def approve_contact_for_further_communication(id):
 @flaskapp.route("/api/messages/", methods=["POST"])
 def send_message():
     message_json = request.get_json()
+    print(message_json)
     try:
         message = message_schema.load(message_json)
     except ValidationError:
@@ -161,10 +168,12 @@ def send_message():
     repository = MessageRepository()
     repository.add(message)
     
-    broker = InstanceContainer.resolve(Broker)
-    command = MessageCommand(message.content, message.content_type)
-    address = ConnectionSettings((message.interlocutor.address, TorConfiguration.get_tor_server_port()))
-    payload = Payload(command, address)
-    broker.send(payload)
+    # broker = InstanceContainer.resolve(Broker)
+    # command = MessageCommand(message.content, message.content_type)
+    # address = ConnectionSettings((f'{message.interlocutor.address}.onion', TorConfiguration.get_tor_server_port()))
+    # payload = Payload(command, address)
+    # broker.send(payload)
+
+    emit_message(message)
 
     return {}, 204
