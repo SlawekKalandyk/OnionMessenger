@@ -6,5 +6,7 @@
     <mat-sidenav-content class="sidenav-content">
         <app-chat>
         </app-chat>
+        <app-chat-box *ngIf="isAnyContactActive" class="app-chat-box">
+        </app-chat-box>
     </mat-sidenav-content>
 </mat-sidenav-container>

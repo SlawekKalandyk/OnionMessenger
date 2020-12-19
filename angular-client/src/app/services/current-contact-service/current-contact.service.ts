@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { Observable, ReplaySubject } from 'rxjs';
-import { Contact } from 'src/app/data-transfer/contact';
+import { Contact } from 'src/app/model/contact';
 
 @Injectable({
   providedIn: 'root'

@@ -1,8 +1,8 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
-import { Contact } from 'src/app/data-transfer/contact';
-import { Message } from 'src/app/data-transfer/message';
+import { ContactDto } from 'src/app/data-transfer/contact-dto';
+import { MessageDto } from 'src/app/data-transfer/message-dto';
 import { BaseService } from '../base-service/base.service';
 
 @Injectable({
@@ -13,34 +13,34 @@ export class ContactService {
   contacts_address: string
 
   constructor(private base: BaseService, private http: HttpClient) { 
-    this.contacts_address = this.base.api_address + this.api_prefix
+    this.contacts_address = this.base.api_address + this.api_prefix;
   }
 
-  getAllContacts(): Observable<Contact[]> {
-    return this.http.get<Contact[]>(this.contacts_address)
+  getAllContacts(): Observable<ContactDto[]> {
+    return this.http.get<ContactDto[]>(this.contacts_address);
   }
 
-  getContactByid(id: string): Observable<Contact> {
-    return this.http.get<Contact>(this.contacts_address + id)
+  getContactByid(id: string): Observable<ContactDto> {
+    return this.http.get<ContactDto>(this.contacts_address + id);
   }
 
-  addContact(contact: Contact): Observable<Contact> {
-    return this.http.post<Contact>(this.contacts_address, contact)
+  addContact(contactDto: ContactDto): Observable<ContactDto> {
+    return this.http.post<ContactDto>(this.contacts_address, contactDto);
   }
 
-  changeName(contactId: string, newName: string): Observable<Contact> {
-    return this.http.patch<Contact>(this.contacts_address + contactId + '?name=' + newName, null)
+  changeName(contactId: string, newName: string): Observable<ContactDto> {
+    return this.http.patch<ContactDto>(this.contacts_address + contactId + '?name=' + newName, null);
   }
 
   removeContact(contactId: string) {
-    return this.http.delete(this.contacts_address + contactId)
+    return this.http.delete(this.contacts_address + contactId);
   }
 
-  getMessagesForContact(contactId: string): Observable<Message[]> {
-    return this.http.get<Message[]>(this.contacts_address + contactId + '/messages')
+  getMessagesForContact(contactId: string): Observable<MessageDto[]> {
+    return this.http.get<MessageDto[]>(this.contacts_address + contactId + '/messages');
   }
 
   approveContactForFurtherCommunication(contactId: string, isApproved: boolean) {
-    return this.http.patch(this.contacts_address + contactId + '/approval?approved=' + isApproved, null)
+    return this.http.patch(this.contacts_address + contactId + '/approval?approved=' + isApproved, null);
   }
 }

@@ -1,0 +1,14 @@
+.chat-box-container {
+    display: flex;
+    margin-left: 5px;
+    margin-right: 5px;
+}
+
+.message-field {
+    flex: 1 0 auto;
+    margin-right: 10px;
+}
+
+.send-message-button {
+    flex: 1 0 auto;
+}

@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { Message } from 'src/app/data-transfer/message';
+import { MessageDto } from 'src/app/data-transfer/message-dto';
 import { BaseService } from '../base-service/base.service';
 
 @Injectable({
@@ -14,7 +14,7 @@ export class MessageService {
     this.messages_address = this.base.api_address + this.api_prefix
   }
 
-  sendMessage(message: Message) {
-    return this.http.post(this.messages_address, message)
+  sendMessage(messageDto: MessageDto) {
+    return this.http.post(this.messages_address, messageDto)
   }
 }

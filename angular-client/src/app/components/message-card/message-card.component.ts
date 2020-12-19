@@ -1,7 +1,6 @@
-
 import { DatePipe } from '@angular/common';
 import { Component, Input, OnInit } from '@angular/core';
-import { Message, ContentType } from 'src/app/data-transfer/message';
+import { ContentType, Message } from 'src/app/model/message';
 
 @Component({
   selector: 'app-message-card',

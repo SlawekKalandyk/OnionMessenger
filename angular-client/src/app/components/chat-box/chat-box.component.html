@@ -1,0 +1,6 @@
+<div class="chat-box-container">
+    <mat-form-field class="message-field">
+        <textarea matInput [(ngModel)]="chatMessage"></textarea>
+    </mat-form-field>
+    <button class="send-message-button" mat-raised-button (click)="onSendMessageButtonClick()">Send</button>
+</div>

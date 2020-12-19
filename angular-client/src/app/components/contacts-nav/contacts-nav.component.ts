@@ -1,8 +1,14 @@
 import { Component, OnInit } from '@angular/core';
+import { MatDialog } from '@angular/material/dialog';
 import { of } from 'rxjs';
-import { Contact } from 'src/app/data-transfer/contact';
+import { ContactDto } from 'src/app/data-transfer/contact-dto';
+import { AddContactDialogData } from 'src/app/dialogs/add-contact-dialog/add-contact-dialog-data';
+import { AddContactDialogComponent } from 'src/app/dialogs/add-contact-dialog/add-contact-dialog.component';
+import { Contact } from 'src/app/model/contact';
 import { ContactService } from 'src/app/services/contact-service/contact.service';
 import { CurrentContactService } from 'src/app/services/current-contact-service/current-contact.service';
+import { DtoMappingService } from 'src/app/services/dto-mapping-service/dto-mapping.service';
+import { SocketService } from 'src/app/services/socket-service/socket.service';
 
 @Component({
   selector: 'app-contacts-nav',
@@ -12,19 +18,42 @@ import { CurrentContactService } from 'src/app/services/current-contact-service/
 export class ContactsNavComponent implements OnInit {
   contacts: Contact[] = []
   currentContact!: Contact
-  
-  constructor(private contactService: ContactService, private currentContactService: CurrentContactService) { }
+
+  constructor(public dialog: MatDialog, private contactService: ContactService, private currentContactService: CurrentContactService, 
+    private socketService: SocketService, private mappingService: DtoMappingService) { }
 
   ngOnInit(): void {
-    this.contactService.getAllContacts().subscribe(response => this.contacts = response);
-    if(this.contacts.length > 0) {
+    this.contactService.getAllContacts().subscribe(response => this.contacts = response.map(contactDto => this.mappingService.mapContactDtoToContact(contactDto)));
+    if (this.contacts.length > 0) {
       this.currentContactService.currentContact = of(this.contacts[0]);
     }
 
     this.currentContactService.currentContact.subscribe(response => this.currentContact = response)
+    this.socketService.getContacts().subscribe(contactDto => {
+      let contact = this.mappingService.mapContactDtoToContact(contactDto);
+      this.contacts.push(contact);
+    });
   }
 
   onSelect(contact: Contact) {
     this.currentContactService.currentContact = of(contact);
+  }
+
+  openAddContactDialog() {
+    const dialogRef = this.dialog.open(AddContactDialogComponent, {
+      width: '600px',
+      data: { name: '', address: '' }
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      let contact: ContactDto = {
+        contact_id: result.address,
+        name: result.name,
+        approved: true,
+        awaiting_approval: true,
+        address: result.address,
+      };
+      this.contactService.addContact(contact).subscribe();
+    });
   }
 }

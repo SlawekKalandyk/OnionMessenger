@@ -9,3 +9,9 @@
 .sidenav-content {
     width: 85%
 }
+
+.app-chat-box {
+    position: fixed;
+    bottom: 0px;
+    width: 100%;
+}

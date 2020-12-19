@@ -1,6 +1,5 @@
 import { Component, Input, OnInit } from '@angular/core';
-import { Contact, ContactState } from 'src/app/data-transfer/contact';
-import { CurrentContactService } from 'src/app/services/current-contact-service/current-contact.service';
+import { Contact, ContactState } from 'src/app/model/contact';
 
 @Component({
   selector: 'app-contact-card',

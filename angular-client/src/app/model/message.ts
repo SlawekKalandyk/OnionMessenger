@@ -1,4 +1,4 @@
-import { Contact } from './contact';
+import { Contact } from "./contact";
 
 export enum MessageState {
     SENT = 1,
@@ -16,7 +16,7 @@ export enum ContentType {
 }
     
 export interface Message {
-    contact: Contact
+    interlocutor: Contact
     content: string
     content_type: ContentType
     timestamp: Date
