@@ -1,4 +1,4 @@
-from typing import Any, Dict, List, Tuple
+from typing import Dict
 
 
 class InstanceContainer:
@@ -7,21 +7,21 @@ class InstanceContainer:
 
     @staticmethod
     def register_singleton(register_type, instance):
-        if InstanceContainer._transients[register_type]:
+        if register_type in InstanceContainer._transients:
             InstanceContainer._transients[register_type] = None
         InstanceContainer._singletons[register_type] = instance
 
     @staticmethod
     def register_transient(register_type):
-        if InstanceContainer._singletons[register_type]:
+        if register_type in InstanceContainer._singletons:
             InstanceContainer._singletons[register_type] = None
         InstanceContainer._transients[register_type] = register_type
 
     @staticmethod
     def resolve(registered_type):
-        if InstanceContainer._transients[registered_type]:
+        if registered_type in InstanceContainer._transients:
             return InstanceContainer._transients[registered_type]()
-        elif InstanceContainer._singletons[registered_type]:
+        elif registered_type in InstanceContainer._singletons:
             return InstanceContainer._singletons[registered_type]
         else:
             raise TypeNotInContainerError()
