@@ -7,6 +7,7 @@ import socks
 from threading import Thread
 import socketserver
 from abc import ABC, abstractmethod
+from time import sleep
 
 from app.networking.base import ConnectionSettings, Packet, PacketHandler, HandleableThreadingTCPServer
 from app.shared.helpful_abstractions import Closable
@@ -66,6 +67,9 @@ class TorService(StoppableThread, Closable):
 
     def run(self):
         self._start_hidden_service()
+        # keep the thread alive indefinitely, so whenever it dies Tor dies with it
+        while(True):
+            sleep(0.1)
 
     def close(self):
         if self._controller != None:
@@ -74,7 +78,7 @@ class TorService(StoppableThread, Closable):
             self._tor.terminate()
 
     def _start_hidden_service(self):
-        self._tor = launch_tor_with_config(tor_cmd=TorConfiguration.get_tor_executable_path(), config = {
+        self._tor = launch_tor_with_config(tor_cmd=TorConfiguration.get_tor_executable_path(), take_ownership=True, config = {
             'ControlPort': '9051'
         })
         self._controller = Controller.from_port()
