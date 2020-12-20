@@ -159,7 +159,6 @@ def approve_contact_for_further_communication(id):
 @flaskapp.route("/api/messages/", methods=["POST"])
 def send_message():
     message_json = request.get_json()
-    print(message_json)
     try:
         message = message_schema.load(message_json)
     except ValidationError:
@@ -169,8 +168,8 @@ def send_message():
     repository.add(message)
     
     broker = InstanceContainer.resolve(Broker)
-    command = MessageCommand(message.content, message.content_type)
-    address = ConnectionSettings((f'{message.interlocutor.address}.onion', TorConfiguration.get_tor_server_port()))
+    command = MessageCommand(source=TorConfiguration.get_hidden_service_id(), content=message.content, content_type=message.content_type)
+    address = ConnectionSettings(f'{message.interlocutor.address}.onion', TorConfiguration.get_tor_server_port())
     payload = Payload(command, address)
     broker.send(payload)
 

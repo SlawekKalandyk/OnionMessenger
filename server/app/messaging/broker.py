@@ -41,7 +41,6 @@ class Broker(PacketHandler, StoppableThread):
     def _handle_outgoing(self):
         while not self._send_queue.empty():
             payload: Payload = self._send_queue.get()
-            payload.command.source = TorConfiguration.get_hidden_service_id()
             packet = Packet(self._command_mapper.map_to_bytes(payload.command), payload.address)
             client = TorClient(packet)
             client.start()

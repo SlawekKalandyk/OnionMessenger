@@ -2,7 +2,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from dataclasses_json import dataclass_json
 from re import search
-from typing import Dict, List, Tuple
+from typing import Any, Dict, List, Tuple
 import datetime
 
 from app.messaging.base import Command
@@ -49,7 +49,7 @@ class CommandTypeNotRegisteredError(Exception):
 @dataclass_json
 @dataclass(frozen=True)
 class MessageCommand(Command):
-    content: any
+    content: str
     content_type: ContentType
 
     @classmethod
