@@ -1,8 +1,6 @@
-<div>
-    <div class="chat-messages-container">
-        <div *ngFor="let message of messages">
-            <app-message-card [message]="message">
-            </app-message-card>
-        </div>
+<div class="chat-messages-container">
+    <div *ngFor="let message of messages | messageTimestampSort">
+        <app-message-card [message]="message">
+        </app-message-card>
     </div>
 </div>

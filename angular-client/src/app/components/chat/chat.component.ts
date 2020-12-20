@@ -29,9 +29,8 @@ export class ChatComponent implements OnInit {
     this.socketService.getMessages().subscribe(messageDto => {
       if(messageDto.interlocutor.contact_id == this.contact.contact_id) {
         let message = this.mappingService.mapMessageDtoToMessage(messageDto);
-        this.messages.push(message);
+        this.messages.unshift(message);
       }
     })
   }
-
 }
