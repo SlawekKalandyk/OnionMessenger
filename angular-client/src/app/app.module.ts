@@ -21,6 +21,7 @@ import { ChatComponent } from './components/chat/chat.component';
 import { MessageCardComponent } from './components/message-card/message-card.component';
 import { ChatBoxComponent } from './components/chat-box/chat-box.component';
 import { AddContactDialogComponent } from './dialogs/add-contact-dialog/add-contact-dialog.component';
+import { MessageTimestampSortPipe } from './pipes/message-timestamp-sort/message-timestamp-sort.pipe';
 
 @NgModule({
   declarations: [
@@ -31,6 +32,7 @@ import { AddContactDialogComponent } from './dialogs/add-contact-dialog/add-cont
     MessageCardComponent,
     ChatBoxComponent,
     AddContactDialogComponent,
+    MessageTimestampSortPipe,
   ],
   imports: [
     BrowserModule,
