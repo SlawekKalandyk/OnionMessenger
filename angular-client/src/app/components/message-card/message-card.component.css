@@ -19,12 +19,14 @@
     text-align: right;
     margin-left: auto;
     background-color: lightgray;
+    word-break: break-word;
 }
 
 .received-message {
     max-width: 60%;
     text-align: left;
     margin-right: auto;
+    word-break: break-word;
 }
 
 .sent-message-timestamp {
