@@ -3,11 +3,11 @@
 }
 
 .sidenav {
-    width: 15%
+    width: 20%
 }
 
 .sidenav-content {
-    width: 85%;
+    width: 80%;
     display: flex;
     flex-flow: column nowrap;
 }
@@ -19,4 +19,10 @@
 
 .app-chat-box {
     width: 100%;
+}
+
+::ng-deep.mat-tab-label, ::ng-deep.mat-tab-label-active{
+    min-width: 0 !important;
+    padding: 3px !important;
+    margin: 3px !important;
 }

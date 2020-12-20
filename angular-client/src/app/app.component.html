@@ -1,7 +1,17 @@
 <mat-sidenav-container class="sidenav-container" fullscreen autosize>
     <mat-sidenav class="sidenav" mode="side" opened="true" position="start">
-        <app-contacts-nav>
-        </app-contacts-nav>
+        <mat-tab-group mat-stretch-tabs>
+            <mat-tab label="Contacts">
+                <app-contacts-nav>
+                </app-contacts-nav>
+            </mat-tab>
+            <mat-tab label="Pending">
+
+            </mat-tab>
+            <mat-tab label="Settings">
+
+            </mat-tab>
+        </mat-tab-group>
     </mat-sidenav>
     <mat-sidenav-content class="sidenav-content">
         <app-chat class="app-chat">

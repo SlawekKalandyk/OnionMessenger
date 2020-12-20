@@ -14,6 +14,7 @@ import { MatCardModule } from '@angular/material/card';
 import { MatDialogModule } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
+import { MatTabsModule } from '@angular/material/tabs';
 
 import { ContactsNavComponent } from './components/contacts-nav/contacts-nav.component';
 import { ContactCardComponent } from './components/contact-card/contact-card.component';
@@ -46,7 +47,8 @@ import { MessageTimestampSortPipe } from './pipes/message-timestamp-sort/message
     MatCardModule,
     MatDialogModule,
     MatFormFieldModule,
-    MatInputModule
+    MatInputModule,
+    MatTabsModule
   ],
   providers: [],
   bootstrap: [AppComponent]
