@@ -168,11 +168,11 @@ def send_message():
     repository = MessageRepository()
     repository.add(message)
     
-    # broker = InstanceContainer.resolve(Broker)
-    # command = MessageCommand(message.content, message.content_type)
-    # address = ConnectionSettings((f'{message.interlocutor.address}.onion', TorConfiguration.get_tor_server_port()))
-    # payload = Payload(command, address)
-    # broker.send(payload)
+    broker = InstanceContainer.resolve(Broker)
+    command = MessageCommand(message.content, message.content_type)
+    address = ConnectionSettings((f'{message.interlocutor.address}.onion', TorConfiguration.get_tor_server_port()))
+    payload = Payload(command, address)
+    broker.send(payload)
 
     emit_message(message)
 
