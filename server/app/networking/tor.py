@@ -23,7 +23,6 @@ class TorServer(StoppableThread, Closable):
 
     def run(self):
         server_thread = Thread(target=self._tcp_server.serve_forever)
-        server_thread.daemon = True
         server_thread.start()
         
     def close(self):
