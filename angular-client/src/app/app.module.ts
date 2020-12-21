@@ -27,6 +27,7 @@ import { MessageTimestampSortPipe } from './pipes/message-timestamp-sort/message
 import { UserSettingsComponent } from './components/user-settings/user-settings.component';
 import { PendingContactsComponent } from './components/pending-contacts/pending-contacts.component';
 import { PendingContactCardComponent } from './components/pending-contact-card/pending-contact-card.component';
+import { AddContactNameOnApproveDialogComponent } from './dialogs/add-contact-name-on-approve-dialog/add-contact-name-on-approve-dialog.component';
 
 @NgModule({
   declarations: [
@@ -41,6 +42,7 @@ import { PendingContactCardComponent } from './components/pending-contact-card/p
     UserSettingsComponent,
     PendingContactsComponent,
     PendingContactCardComponent,
+    AddContactNameOnApproveDialogComponent,
   ],
   imports: [
     BrowserModule,

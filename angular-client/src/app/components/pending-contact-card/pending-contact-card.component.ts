@@ -1,4 +1,6 @@
 import { Component, Input, OnInit } from '@angular/core';
+import { MatDialog } from '@angular/material/dialog';
+import { AddContactNameOnApproveDialogComponent } from 'src/app/dialogs/add-contact-name-on-approve-dialog/add-contact-name-on-approve-dialog.component';
 import { Contact } from 'src/app/model/contact';
 import { ContactService } from 'src/app/services/contact-service/contact.service';
 
@@ -11,7 +13,7 @@ export class PendingContactCardComponent implements OnInit {
   @Input() contact!: Contact;
   displayButtons: boolean = false
 
-  constructor(private contactService: ContactService) { }
+  constructor(public dialog: MatDialog, private contactService: ContactService) { }
 
   ngOnInit(): void {
   }
@@ -25,6 +27,14 @@ export class PendingContactCardComponent implements OnInit {
   }
 
   onApproval(approve: boolean) {
-    this.contactService.approveContactForFurtherCommunication(this.contact.contact_id, approve).subscribe();
+    const dialogRef = this.dialog.open(AddContactNameOnApproveDialogComponent, {
+      width: '600px',
+      data: { name: ''}
+    });
+    dialogRef.afterClosed().subscribe(result => {
+      this.contactService.changeName(this.contact.contact_id, result.name).subscribe(_ => {
+        this.contactService.approveContactForFurtherCommunication(this.contact.contact_id, approve).subscribe();
+      })
+    });
   }
 }
