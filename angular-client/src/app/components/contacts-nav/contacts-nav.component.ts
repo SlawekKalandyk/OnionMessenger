@@ -19,7 +19,7 @@ export class ContactsNavComponent implements OnInit {
   contacts: Contact[] = []
   currentContact!: Contact
 
-  constructor(public dialog: MatDialog, private contactService: ContactService, private currentContactService: CurrentContactService, 
+  constructor(public dialog: MatDialog, private contactService: ContactService, private currentContactService: CurrentContactService,
     private socketService: SocketService, private mappingService: DtoMappingService) { }
 
   ngOnInit(): void {
@@ -30,8 +30,16 @@ export class ContactsNavComponent implements OnInit {
 
     this.currentContactService.currentContact.subscribe(response => this.currentContact = response)
     this.socketService.getContacts().subscribe(contactDto => {
-      let contact = this.mappingService.mapContactDtoToContact(contactDto);
-      this.contacts.push(contact);
+      if (contactDto.approved && !contactDto.awaiting_approval) {
+        let newContact = this.mappingService.mapContactDtoToContact(contactDto);
+        let existingContactIndex = this.contacts.findIndex(contact => contact.contact_id === contactDto.contact_id);
+        
+        if (existingContactIndex > -1) {
+          this.contacts[existingContactIndex] = newContact;
+        } else {
+          this.contacts.push(newContact);
+        }
+      }
     });
   }
 

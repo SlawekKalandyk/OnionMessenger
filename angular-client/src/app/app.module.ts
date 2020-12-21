@@ -25,6 +25,8 @@ import { ChatBoxComponent } from './components/chat-box/chat-box.component';
 import { AddContactDialogComponent } from './dialogs/add-contact-dialog/add-contact-dialog.component';
 import { MessageTimestampSortPipe } from './pipes/message-timestamp-sort/message-timestamp-sort.pipe';
 import { UserSettingsComponent } from './components/user-settings/user-settings.component';
+import { PendingContactsComponent } from './components/pending-contacts/pending-contacts.component';
+import { PendingContactCardComponent } from './components/pending-contact-card/pending-contact-card.component';
 
 @NgModule({
   declarations: [
@@ -37,6 +39,8 @@ import { UserSettingsComponent } from './components/user-settings/user-settings.
     AddContactDialogComponent,
     MessageTimestampSortPipe,
     UserSettingsComponent,
+    PendingContactsComponent,
+    PendingContactCardComponent,
   ],
   imports: [
     BrowserModule,

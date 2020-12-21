@@ -1,0 +1,21 @@
+<div class="pending-contacts-nav-container">
+    <div class="mat-subheader waiting-for-user-approval">
+        Waiting for your approval
+    </div>
+    <mat-list class="pending-contacts-list">
+        <mat-list-item *ngFor="let contact of waitingForUserApprovalContacts">
+            <app-pending-contact-card [contact]="contact">
+            </app-pending-contact-card>
+        </mat-list-item>
+    </mat-list>
+    <mat-divider></mat-divider>
+    <div class="mat-subheader waiting-for-interlocutor-approval">
+        Waiting for their approval 
+    </div>
+    <mat-list class="pending-contacts-list">
+        <mat-list-item *ngFor="let contact of waitingForInterlocutorApprovalContacts">
+            <app-pending-contact-card [contact]="contact">
+            </app-pending-contact-card>
+        </mat-list-item>
+    </mat-list>
+</div>

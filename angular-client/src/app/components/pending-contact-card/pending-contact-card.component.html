@@ -1,0 +1,19 @@
+<div class="pending-contact-container" (mouseenter)="onMouseEnter()" (mouseleave)="onMouseLeave()">
+    <div *ngIf="contact.approved" class="main-card">
+        <div class="pending-contact-name">
+            {{contact.name}}
+        </div>
+        <div class="pending-approved-contact-address">
+            ID: {{contact.address}}
+        </div>
+    </div>
+    <div *ngIf='!contact.approved' class="main-card">
+        <div class="pending-not-approved-contact-address">
+            ID: {{contact.address}}
+        </div>
+    </div>
+    <div *ngIf="displayButtons && !contact.approved" class="action-buttons">
+        <button mat-stroked-button (click)="onApproval(true)" class="accept-button">Accept</button>
+        <button mat-stroked-button (click)="onApproval(false)" class="decline-button">Decline</button>
+    </div>
+</div>

@@ -1,0 +1,37 @@
+.pending-contact-container {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+}
+
+.pending-contact-name {
+    font-size: medium;
+}
+
+.pending-approved-contact-address {
+    font-size: small;
+    color: grey;
+    word-break: break-word;
+}
+
+.pending-not-approved-contact-address {
+    font-size: medium;
+    color: grey;
+    word-break: break-word;
+}
+
+.main-card {
+    flex: 0 1 auto;
+}
+
+.action-buttons {
+    flex: 0 1 auto;
+}
+
+.accept-button {
+    margin-bottom: 5px;
+}
+
+.decline-button {
+
+}
