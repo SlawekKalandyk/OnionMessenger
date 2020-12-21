@@ -94,6 +94,6 @@ class ApproveCommand(Command):
         contact = contact if contact else Contact(contact_id=self.source, address=self.source)
         contact.approved = self.approved
         contact.awaiting_approval = False
-        receiver.update(contact)
+        receiver.contact_repository.update(contact)
         emit_contact(contact)
         return []
