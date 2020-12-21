@@ -15,6 +15,7 @@ import { MatDialogModule } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatTabsModule } from '@angular/material/tabs';
+import { MatDividerModule } from '@angular/material/divider';
 
 import { ContactsNavComponent } from './components/contacts-nav/contacts-nav.component';
 import { ContactCardComponent } from './components/contact-card/contact-card.component';
@@ -23,6 +24,7 @@ import { MessageCardComponent } from './components/message-card/message-card.com
 import { ChatBoxComponent } from './components/chat-box/chat-box.component';
 import { AddContactDialogComponent } from './dialogs/add-contact-dialog/add-contact-dialog.component';
 import { MessageTimestampSortPipe } from './pipes/message-timestamp-sort/message-timestamp-sort.pipe';
+import { UserSettingsComponent } from './components/user-settings/user-settings.component';
 
 @NgModule({
   declarations: [
@@ -34,6 +36,7 @@ import { MessageTimestampSortPipe } from './pipes/message-timestamp-sort/message
     ChatBoxComponent,
     AddContactDialogComponent,
     MessageTimestampSortPipe,
+    UserSettingsComponent,
   ],
   imports: [
     BrowserModule,
@@ -48,7 +51,8 @@ import { MessageTimestampSortPipe } from './pipes/message-timestamp-sort/message
     MatDialogModule,
     MatFormFieldModule,
     MatInputModule,
-    MatTabsModule
+    MatTabsModule,
+    MatDividerModule
   ],
   providers: [],
   bootstrap: [AppComponent]

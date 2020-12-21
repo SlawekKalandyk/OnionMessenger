@@ -9,13 +9,15 @@
 
             </mat-tab>
             <mat-tab label="Settings">
-
+                <app-user-settings>
+                </app-user-settings>
             </mat-tab>
         </mat-tab-group>
     </mat-sidenav>
     <mat-sidenav-content class="sidenav-content">
         <app-chat class="app-chat">
         </app-chat>
+        <mat-divider></mat-divider>
         <app-chat-box *ngIf="isAnyContactActive" class="app-chat-box">
         </app-chat-box>
     </mat-sidenav-content>
