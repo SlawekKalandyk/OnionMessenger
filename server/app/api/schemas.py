@@ -9,7 +9,7 @@ class ContactSchema(Schema):
     __model__ = Contact
 
     contact_id = fields.Str()
-    name = fields.Str()
+    name = fields.Str(missing=None, allow_none=True)
     approved = fields.Bool()
     awaiting_approval = fields.Bool()
     address = fields.Str()
