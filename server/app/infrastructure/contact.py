@@ -27,13 +27,13 @@ class ContactRepository(metaclass=Singleton):
         return [x for x in Contact.select().dicts()]
 
     def get_all_approved(self):
-        return Contact.select().where(Contact.approved and not Contact.awaiting_approval)
+        return Contact.select().where(Contact.approved == True and Contact.awaiting_approval == False)
 
     def get_all_pending(self):
-        return Contact.select().where(Contact.awaiting_approval)
+        return Contact.select().where(Contact.awaiting_approval == True)
 
     def get_all_blocked(self):
-        return Contact.select().where(not Contact.approved and not Contact.awaiting_approval)
+        return Contact.select().where(Contact.approved == False and Contact.awaiting_approval == False)
 
     def update(self, contact: Contact):
         contact.save()
