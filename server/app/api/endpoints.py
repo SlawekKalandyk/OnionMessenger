@@ -171,7 +171,7 @@ def approve_contact_for_further_communication(id):
     repository.update(contact)
 
     broker = InstanceContainer.resolve(Broker)
-    command = ApproveCommand(source=TorConfiguration.get_hidden_service_id(), approve=is_approved)
+    command = ApproveCommand(source=TorConfiguration.get_hidden_service_id(), approved=is_approved)
     address = ConnectionSettings(f'{contact.address}.onion', TorConfiguration.get_tor_server_port())
     payload = Payload(command, address)
     broker.send(payload)
