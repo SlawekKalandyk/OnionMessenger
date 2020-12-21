@@ -72,7 +72,7 @@ def add_contact():
     
     broker = InstanceContainer.resolve(Broker)
     command = HelloCommand(source=TorConfiguration.get_hidden_service_id())
-    address = ConnectionSettings(contact.address, TorConfiguration.get_tor_server_port())
+    address = ConnectionSettings(f'{contact.address}.onion', TorConfiguration.get_tor_server_port())
     payload = Payload(command, address)
     broker.send(payload)
 
@@ -172,7 +172,7 @@ def approve_contact_for_further_communication(id):
 
     broker = InstanceContainer.resolve(Broker)
     command = ApproveCommand(source=TorConfiguration.get_hidden_service_id(), approve=is_approved)
-    address = ConnectionSettings(contact.address, TorConfiguration.get_tor_server_port())
+    address = ConnectionSettings(f'{contact.address}.onion', TorConfiguration.get_tor_server_port())
     payload = Payload(command, address)
     broker.send(payload)
 
