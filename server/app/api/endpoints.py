@@ -82,6 +82,22 @@ def get_contacts():
     return jsonify(as_schema), 200
 
 
+@flaskapp.route("/api/contacts/approved", methods=["GET"])
+def get_approved_contacts():
+    repository = ContactRepository()
+    contacts = repository.get_all_approved()
+    as_schema = contacts_schema.dump(list(contacts))
+    return jsonify(as_schema), 200
+
+
+@flaskapp.route("/api/contacts/pending", methods=["GET"])
+def get_pending_contacts():
+    repository = ContactRepository()
+    contacts = repository.get_all_pending()
+    as_schema = contacts_schema.dump(list(contacts))
+    return jsonify(as_schema), 200
+
+
 @flaskapp.route("/api/contacts/<string:id>", methods=["GET"])
 def get_contact(id):
     repository = ContactRepository()
@@ -176,3 +192,8 @@ def send_message():
     emit_message(message)
 
     return {}, 204
+
+
+@flaskapp.route("/api/info/serviceId", methods=["GET"])
+def get_hidden_service_address():
+    return jsonify(TorConfiguration.get_hidden_service_id()), 200
