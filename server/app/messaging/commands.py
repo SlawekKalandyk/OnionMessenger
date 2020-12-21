@@ -57,8 +57,8 @@ class MessageCommand(Command):
         return 'MESSAGE'
 
     def invoke(self, receiver: MessageCommandReceiver) -> List[Command]:
-        contact = receiver.contact_repository.get_by_id(self.source)
-        if contact and contact.approved:
+        contact: Contact = receiver.contact_repository.get_by_id(self.source)
+        if contact and contact.approved and not contact.awaiting_approval:
             message = Message(interlocutor=contact, content=self.content, content_type=self.content_type, \
                 timestamp=datetime.datetime.now(), message_author=MessageAuthor.INTERLOCUTOR, message_state=MessageState.RECEIVED)
             receiver.message_repository.add(message)
@@ -76,6 +76,7 @@ class HelloCommand(Command):
     def invoke(self, receiver: HelloCommandReceiver) -> List[Command]:
         new_contact = Contact(contact_id=self.source, approved=False, awaiting_approval=True, address=self.source)
         receiver.contact_repository.add(new_contact)
+        emit_contact(new_contact)
         return []
 
 
@@ -94,4 +95,5 @@ class ApproveCommand(Command):
         contact.approved = self.approved
         contact.awaiting_approval = False
         receiver.update(contact)
+        emit_contact(contact)
         return []

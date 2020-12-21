@@ -1,9 +1,9 @@
 from app.infrastructure.message import MessageRepository
 from app.infrastructure.contact import ContactRepository
-from app.messaging.receivers import MessageCommandReceiver
+from app.messaging.receivers import ApproveCommandReceiver, HelloCommandReceiver, MessageCommandReceiver
 from app.networking.tor import TorServer, TorService
 from app.networking.base import ConnectionSettings
-from app.messaging.commands import CommandMapper, MessageCommand
+from app.messaging.commands import ApproveCommand, CommandMapper, HelloCommand, MessageCommand
 from app.messaging.command_handler import CommandHandler
 from app.messaging.broker import Broker
 from app.shared.container import InstanceContainer
@@ -12,11 +12,17 @@ from flask_socketio import SocketIO
 
 def register_command_mappings(command_mapper: CommandMapper):
     command_mapper.register(MessageCommand)
-
+    command_mapper.register(HelloCommand)
+    command_mapper.register(ApproveCommand)
+    
 
 def register_commands(command_handler: CommandHandler):
     messageReceiver = MessageCommandReceiver(ContactRepository(), MessageRepository())
     command_handler.register(MessageCommand, messageReceiver)
+    helloReceiver = HelloCommandReceiver(ContactRepository())
+    command_handler.register(HelloCommand, helloReceiver)
+    approveReceiver = ApproveCommandReceiver(ContactRepository())
+    command_handler.register(ApproveCommand, approveReceiver)
 
 
 def main():

@@ -4,7 +4,7 @@ from flask_socketio import SocketIO
 from marshmallow import ValidationError
 
 from app.messaging.broker import Broker, Payload
-from app.messaging.commands import ApproveCommand, MessageCommand
+from app.messaging.commands import ApproveCommand, HelloCommand, MessageCommand
 from app.messaging.socket_emitter import emit_contact, emit_message
 from app.shared.container import InstanceContainer
 from app.shared.config import TorConfiguration
@@ -69,6 +69,13 @@ def add_contact():
         return {}, 409
     
     repository.add(contact)
+    
+    broker = InstanceContainer.resolve(Broker)
+    command = HelloCommand(source=TorConfiguration.get_hidden_service_id())
+    address = ConnectionSettings((contact.address, TorConfiguration.get_tor_server_port()))
+    payload = Payload(command, address)
+    broker.send(payload)
+
     emit_contact(contact)
     
     return contact_json, 201
@@ -163,11 +170,13 @@ def approve_contact_for_further_communication(id):
     contact.awaiting_approval = False
     repository.update(contact)
 
-    # broker = InstanceContainer.resolve(Broker)
-    # command = ApproveCommand(is_approved)
-    # address = ConnectionSettings((contact.address, TorConfiguration.get_tor_server_port()))
-    # payload = Payload(command, address)
-    # broker.send(payload)
+    broker = InstanceContainer.resolve(Broker)
+    command = ApproveCommand(source=TorConfiguration.get_hidden_service_id(), approve=is_approved)
+    address = ConnectionSettings((contact.address, TorConfiguration.get_tor_server_port()))
+    payload = Payload(command, address)
+    broker.send(payload)
+
+    emit_contact(contact)
 
     return {}, 204
 
