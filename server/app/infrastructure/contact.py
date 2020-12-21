@@ -7,7 +7,7 @@ from app.shared.helpful_abstractions import Singleton
 
 class Contact(BaseModel):
     contact_id = TextField(primary_key=True)
-    name = TextField()
+    name = TextField(null=True)
     approved = BooleanField()
     awaiting_approval = BooleanField()
     address = TextField()
