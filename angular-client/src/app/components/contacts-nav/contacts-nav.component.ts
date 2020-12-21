@@ -23,7 +23,7 @@ export class ContactsNavComponent implements OnInit {
     private socketService: SocketService, private mappingService: DtoMappingService) { }
 
   ngOnInit(): void {
-    this.contactService.getAllContacts().subscribe(response => this.contacts = response.map(contactDto => this.mappingService.mapContactDtoToContact(contactDto)));
+    this.contactService.getAllApprovedContacts().subscribe(response => this.contacts = response.map(contactDto => this.mappingService.mapContactDtoToContact(contactDto)));
     if (this.contacts.length > 0) {
       this.currentContactService.currentContact = of(this.contacts[0]);
     }

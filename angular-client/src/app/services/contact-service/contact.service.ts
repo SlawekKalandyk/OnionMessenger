@@ -3,6 +3,7 @@ import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { ContactDto } from 'src/app/data-transfer/contact-dto';
 import { MessageDto } from 'src/app/data-transfer/message-dto';
+import { Contact } from 'src/app/model/contact';
 import { BaseService } from '../base-service/base.service';
 
 @Injectable({
@@ -18,6 +19,14 @@ export class ContactService {
 
   getAllContacts(): Observable<ContactDto[]> {
     return this.http.get<ContactDto[]>(this.contacts_address);
+  }
+
+  getAllApprovedContacts(): Observable<ContactDto[]> {
+    return this.http.get<ContactDto[]>(this.contacts_address + 'approved');
+  }
+
+  getAllPendingContacts(): Observable<ContactDto[]> {
+    return this.http.get<ContactDto[]>(this.contacts_address + 'pending');
   }
 
   getContactByid(id: string): Observable<ContactDto> {
