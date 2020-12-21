@@ -1,5 +1,6 @@
 import { Component, Input, OnInit } from '@angular/core';
 import { Contact } from 'src/app/model/contact';
+import { ContactService } from 'src/app/services/contact-service/contact.service';
 
 @Component({
   selector: 'app-pending-contact-card',
@@ -10,7 +11,7 @@ export class PendingContactCardComponent implements OnInit {
   @Input() contact!: Contact;
   displayButtons: boolean = false
 
-  constructor() { }
+  constructor(private contactService: ContactService) { }
 
   ngOnInit(): void {
   }
@@ -24,6 +25,6 @@ export class PendingContactCardComponent implements OnInit {
   }
 
   onApproval(approve: boolean) {
-
+    this.contactService.approveContactForFurtherCommunication(this.contact.contact_id, approve).subscribe();
   }
 }
