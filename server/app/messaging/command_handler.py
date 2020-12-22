@@ -3,7 +3,7 @@ from typing import Any, Dict, Iterable, Optional
 from dataclasses import dataclass
 from abc import ABC, abstractmethod
 
-from app.messaging.commands import Command, CommandMapper
+from app.messaging.base import Command, CommandMapper
 
 class BaseCommandHandler(ABC):
     @abstractmethod

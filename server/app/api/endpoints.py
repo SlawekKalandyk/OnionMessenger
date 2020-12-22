@@ -4,8 +4,8 @@ from flask_socketio import SocketIO
 from marshmallow import ValidationError
 
 from app.messaging.broker import Broker, Payload
-from app.messaging.commands import ApproveCommand, HelloCommand, MessageCommand
-from app.messaging.socket_emitter import emit_contact, emit_message
+from app.api.commands import ApproveCommand, HelloCommand, MessageCommand
+from app.api.socket_emitter import emit_contact, emit_message
 from app.shared.container import InstanceContainer
 from app.shared.config import TorConfiguration
 from app.networking.base import ConnectionSettings

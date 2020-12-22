@@ -1,10 +1,11 @@
 from app.api.observers import TorHiddenServiceStartObserver
 from app.infrastructure.message import MessageRepository
 from app.infrastructure.contact import ContactRepository
-from app.messaging.receivers import ApproveCommandReceiver, HelloCommandReceiver, MessageCommandReceiver
+from app.api.receivers import ApproveCommandReceiver, HelloCommandReceiver, MessageCommandReceiver
 from app.networking.tor import TorServer, TorService
 from app.networking.base import ConnectionSettings
-from app.messaging.commands import ApproveCommand, CommandMapper, HelloCommand, MessageCommand
+from app.api.commands import ApproveCommand, HelloCommand, MessageCommand
+from app.messaging.base import CommandMapper
 from app.messaging.command_handler import CommandHandler
 from app.messaging.broker import Broker
 from app.shared.container import InstanceContainer

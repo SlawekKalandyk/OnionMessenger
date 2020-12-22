@@ -3,7 +3,7 @@ from time import sleep
 from typing import Iterable
 from dataclasses import dataclass
 
-from app.messaging.commands import CommandMapper, Command
+from app.messaging.base import CommandMapper, Command
 from app.messaging.command_handler import BaseCommandHandler
 from app.networking.tor import TorClient
 from app.networking.base import ConnectionSettings, Packet, PacketHandler
