@@ -63,18 +63,9 @@ function createWindow() {
 
 app.on('ready', createWindow);
 
-app.on('window-all-closed', async () => {
-    const procs = await psList();
-
+app.on('window-all-closed', function() {
     if (process.platform !== 'darwin')
         app.quit();
-
-    procs.filter(function (proc) {
-        return proc.name === getExecNameWithExtension();
-    })
-    .forEach(item => {
-        tree_kill(item.pid);
-    });
 });
 
 app.on('before-quit', function() {
