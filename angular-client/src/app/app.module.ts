@@ -16,6 +16,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatDividerModule } from '@angular/material/divider';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 
 import { ContactsNavComponent } from './components/contacts-nav/contacts-nav.component';
 import { ContactCardComponent } from './components/contact-card/contact-card.component';
@@ -58,7 +59,8 @@ import { AddContactNameOnApproveDialogComponent } from './dialogs/add-contact-na
     MatFormFieldModule,
     MatInputModule,
     MatTabsModule,
-    MatDividerModule
+    MatDividerModule,
+    MatProgressSpinnerModule
   ],
   providers: [],
   bootstrap: [AppComponent]

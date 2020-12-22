@@ -1,3 +1,4 @@
+from app.api.observers import TorHiddenServiceStartObserver
 from app.infrastructure.message import MessageRepository
 from app.infrastructure.contact import ContactRepository
 from app.messaging.receivers import ApproveCommandReceiver, HelloCommandReceiver, MessageCommandReceiver
@@ -36,6 +37,7 @@ def main():
     tor_server = TorServer(server_settings, broker)
     tor_server.start()
     tor_service = TorService(server_settings)
+    tor_service.add_hidden_service_start_observer(TorHiddenServiceStartObserver())
     tor_service.start()
     
     InstanceContainer.register_singleton(Broker, broker)

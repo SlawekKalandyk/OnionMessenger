@@ -34,3 +34,9 @@ class HandleableThreadingTCPServer(ThreadingTCPServer):
     def __init__(self, address, requestHandler, packetHandler):
         super().__init__(address, requestHandler)
         self._packet_handler = packetHandler
+
+
+class HiddenServiceStartObserver(ABC):
+    @abstractmethod
+    def update(self):
+        pass

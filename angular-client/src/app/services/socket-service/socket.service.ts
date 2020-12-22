@@ -30,4 +30,12 @@ export class SocketService {
       });
     });
   }
+
+  getHiddenServiceStart(): Observable<any> {
+    return new Observable(observer => {
+      this.socket.on('hidden-service-start', (a: any) => {
+        observer.next(a);
+      });
+    });
+  }
 }

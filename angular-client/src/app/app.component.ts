@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { CurrentContactService } from './services/current-contact-service/current-contact.service';
+import { SocketService } from './services/socket-service/socket.service';
 
 @Component({
   selector: 'app-root',
@@ -10,8 +11,9 @@ import { CurrentContactService } from './services/current-contact-service/curren
 export class AppComponent implements OnInit{
   received: string = ''
   isAnyContactActive: boolean = false
+  isHiddenServiceActive: boolean = false
 
-  constructor(private http: HttpClient, private currentContactService: CurrentContactService) {
+  constructor(private http: HttpClient, private currentContactService: CurrentContactService, private socketService: SocketService) {
   }
 
   ngOnInit() {
@@ -20,5 +22,6 @@ export class AppComponent implements OnInit{
     });
 
     this.currentContactService.currentContact.subscribe(response => this.isAnyContactActive = response != undefined);
+    this.socketService.getHiddenServiceStart().subscribe(_ => this.isHiddenServiceActive = true);
   }
 }

@@ -1,3 +1,4 @@
+from typing import List
 from stem import control
 from stem.process import launch_tor_with_config
 from stem.process import subprocess
@@ -9,7 +10,7 @@ import socketserver
 from abc import ABC, abstractmethod
 from time import sleep
 
-from app.networking.base import ConnectionSettings, Packet, PacketHandler, HandleableThreadingTCPServer
+from app.networking.base import ConnectionSettings, HiddenServiceStartObserver, Packet, PacketHandler, HandleableThreadingTCPServer
 from app.shared.helpful_abstractions import Closable
 from app.shared.config import TorConfiguration
 from app.shared.multithreading import StoppableThread
@@ -63,6 +64,7 @@ class TorService(StoppableThread, Closable):
         self._connection_settings = connection_settings
         self._controller: Controller = None
         self._tor: subprocess.Popen = None
+        self._hidden_service_start_observers: List(HiddenServiceStartObserver) = []
 
     def run(self):
         self._start_hidden_service()
@@ -75,6 +77,13 @@ class TorService(StoppableThread, Closable):
             self._controller.close()
         if self._tor != None:
             self._tor.terminate()
+
+    def add_hidden_service_start_observer(self, observer: HiddenServiceStartObserver):
+        self._hidden_service_start_observers.append(observer)
+
+    def _notify_hidden_service_start_observers(self):
+        for observer in self._hidden_service_start_observers:
+            observer.update()
 
     def _start_hidden_service(self):
         self._tor = launch_tor_with_config(tor_cmd=TorConfiguration.get_tor_executable_path(), take_ownership=True, config = {
@@ -92,6 +101,7 @@ class TorService(StoppableThread, Closable):
             TorConfiguration.save_hidden_service_id(response.service_id)
             
         print('Service established at %s.onion' % response.service_id)
+        self._notify_hidden_service_start_observers()
 
 
 class TorRequestHandler(socketserver.BaseRequestHandler):

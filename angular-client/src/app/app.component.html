@@ -1,4 +1,9 @@
-<mat-sidenav-container class="sidenav-container" fullscreen autosize>
+<div *ngIf="!isHiddenServiceActive" class="spinner_container">
+    <mat-spinner class="progress-spinner">
+    </mat-spinner>
+</div>
+
+<mat-sidenav-container *ngIf="isHiddenServiceActive" class="sidenav-container" fullscreen autosize>
     <mat-sidenav class="sidenav" mode="side" opened="true" position="start">
         <mat-tab-group mat-stretch-tabs>
             <mat-tab label="Contacts">
