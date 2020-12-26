@@ -1,5 +1,4 @@
-
-from app.networking.base import ConnectionSettings
+from __future__ import annotations
 from dataclasses import dataclass, InitVar, field
 from dataclasses_json import dataclass_json
 from abc import ABC, abstractmethod
@@ -10,31 +9,18 @@ class Receiver(ABC):
     pass
 
 
-@dataclass(frozen=False)
-class CommandContext:
-    sender: ConnectionSettings = None
-    receiver: ConnectionSettings = None
-
-    def initialize(self,
-                   sender: ConnectionSettings,
-                   receiver: ConnectionSettings):
-        self.sender = sender
-        self.receiver = receiver
-
-
 @dataclass_json
 @dataclass(frozen=True)
 class Command(ABC):
-    context: InitVar[CommandContext] = field(default=CommandContext(),
-                                             init=False)
-
+    source: str
+    
     @classmethod
     @abstractmethod
     def get_identifier(cls) -> str:
         pass
 
     @abstractmethod
-    def invoke(self, receiver: Receiver):
+    def invoke(self, receiver: Receiver) -> List[Command]:
         pass
 
 
@@ -42,7 +28,7 @@ class CommandMapper:
     def __init__(self):
         self._registered_commands: Dict[str, type] = dict()
 
-    def register(self, command_type: type):
+    def register(self, command_type: type) -> CommandMapper:
         identifier = command_type.get_identifier()
         self._registered_commands[identifier] = command_type
         return self

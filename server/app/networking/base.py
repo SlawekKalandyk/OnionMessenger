@@ -26,7 +26,7 @@ class Packet:
 
 class PacketHandler(ABC):
     @abstractmethod
-    def handle_packet(self, packet: Packet):
+    def handle(self, packet: Packet):
         pass
 
 

@@ -71,7 +71,7 @@ def add_contact():
     repository.add(contact)
     
     broker = InstanceContainer.resolve(Broker)
-    command = HelloCommand()
+    command = HelloCommand(source=TorConfiguration.get_hidden_service_id())
     address = ConnectionSettings(f'{contact.address}.onion', TorConfiguration.get_tor_server_port())
     payload = Payload(command, address)
     broker.send(payload)
@@ -171,7 +171,7 @@ def approve_contact_for_further_communication(id):
     repository.update(contact)
 
     broker = InstanceContainer.resolve(Broker)
-    command = ApproveCommand(approved=is_approved)
+    command = ApproveCommand(source=TorConfiguration.get_hidden_service_id(), approved=is_approved)
     address = ConnectionSettings(f'{contact.address}.onion', TorConfiguration.get_tor_server_port())
     payload = Payload(command, address)
     broker.send(payload)
@@ -193,7 +193,7 @@ def send_message():
     repository.add(message)
     
     broker = InstanceContainer.resolve(Broker)
-    command = MessageCommand(content=message.content, content_type=message.content_type)
+    command = MessageCommand(source=TorConfiguration.get_hidden_service_id(), content=message.content, content_type=message.content_type)
     address = ConnectionSettings(f'{message.interlocutor.address}.onion', TorConfiguration.get_tor_server_port())
     payload = Payload(command, address)
     broker.send(payload)

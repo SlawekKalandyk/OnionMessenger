@@ -31,7 +31,7 @@ class Broker(PacketHandler, StoppableThread):
             self._handle_outgoing()
             sleep(0.01)
 
-    def handle_packet(self, packet: Packet):
+    def handle(self, packet: Packet):
         payload = Payload(self._command_mapper.map_from_bytes(packet.data), packet.address)
         self._recv_queue.put(payload)
 
@@ -49,10 +49,6 @@ class Broker(PacketHandler, StoppableThread):
         while not self._recv_queue.empty():
             payload: Payload = self._recv_queue.get()
             command, address = payload.command, payload.address
-            command.context.initialize(
-                address,
-                ConnectionSettings(f'{TorConfiguration.get_hidden_service_id()}.onion', TorConfiguration.get_tor_server_port())
-            )
             responses: Iterable[Command] = self._command_handler.handle(command)
             for response in responses:
                 response_payload = Payload(response, address)
