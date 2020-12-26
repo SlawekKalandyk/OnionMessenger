@@ -1,4 +1,5 @@
 from __future__ import annotations
+from app.networking.base import ConnectionSettings
 from dataclasses import dataclass, InitVar, field
 from dataclasses_json import dataclass_json
 from abc import ABC, abstractmethod
@@ -12,8 +13,8 @@ class Receiver(ABC):
 @dataclass_json
 @dataclass(frozen=True)
 class Command(ABC):
-    source: str
-    
+    sender: InitVar[ConnectionSettings] = field(default=ConnectionSettings('', 0), init=False)
+
     @classmethod
     @abstractmethod
     def get_identifier(cls) -> str:
@@ -22,6 +23,9 @@ class Command(ABC):
     @abstractmethod
     def invoke(self, receiver: Receiver) -> List[Command]:
         pass
+
+    def set_sender(self, sender: ConnectionSettings):
+        self.sender = sender
 
 
 class CommandMapper:

@@ -23,7 +23,7 @@ class MessageCommand(Command):
         return 'MESSAGE'
 
     def invoke(self, receiver: MessageCommandReceiver) -> List[Command]:
-        contact: Contact = receiver.contact_repository.get_by_id(self.source)
+        contact: Contact = receiver.contact_repository.get_by_address(self.sender.address)
         if contact and contact.approved and not contact.awaiting_approval:
             message = Message(interlocutor=contact, content=self.content, content_type=self.content_type, \
                 timestamp=datetime.datetime.now(), message_author=MessageAuthor.INTERLOCUTOR, message_state=MessageState.RECEIVED)
@@ -40,7 +40,7 @@ class HelloCommand(Command):
         return 'HELLO'
 
     def invoke(self, receiver: HelloCommandReceiver) -> List[Command]:
-        new_contact = Contact(contact_id=self.source, approved=False, awaiting_approval=True, address=self.source)
+        new_contact = Contact(contact_id=self.sender.address.split('.')[0], approved=False, awaiting_approval=True, address=self.sender.address)
         receiver.contact_repository.add(new_contact)
         emit_contact(new_contact)
         return []
@@ -56,8 +56,8 @@ class ApproveCommand(Command):
         return 'APPROVE'
 
     def invoke(self, receiver: ApproveCommandReceiver) -> List[Command]:
-        contact = receiver.contact_repository.get_by_id(self.source)
-        contact = contact if contact else Contact(contact_id=self.source, address=self.source)
+        contact = receiver.contact_repository.get_by_address(self.sender.address)
+        contact = contact if contact else Contact(contact_id=self.sender.address.split('.')[0], address=self.sender.address)
         contact.approved = self.approved
         contact.awaiting_approval = False
         receiver.contact_repository.update(contact)

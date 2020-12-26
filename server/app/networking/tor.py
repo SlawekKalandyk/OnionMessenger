@@ -37,9 +37,15 @@ class TorClient(StoppableThread, Closable):
         self._socket = self._create_socket()
 
     def run(self):
-        self._connect()
-        self.send()
-        self.close()
+        try:
+            self._connect()
+        except socks.SOCKS5Error as err:
+            pass
+        except socks.GeneralProxyError as err:
+            pass
+        else:
+            self.send()
+            self.close()
 
     def close(self):
         self._socket.close()
@@ -110,4 +116,4 @@ class TorRequestHandler(socketserver.BaseRequestHandler):
         connection, address = self.request, self.client_address
         # TODO: make it handle any size received
         data = connection.recv(65536)
-        handler.handle(Packet(data, ConnectionSettings.from_tuple(address)))
+        handler.handle_packet(Packet(data, ConnectionSettings.from_tuple(address)))
