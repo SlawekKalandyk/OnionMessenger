@@ -19,3 +19,15 @@ def emit_contact(contact):
 def emit_service_start():
     socket: SocketIO = InstanceContainer.resolve(SocketIO)
     socket.emit('hidden-service-start', None)
+
+
+def emit_contact_offline(contact):
+    contact_schema = ContactSchema()
+    socket: SocketIO = InstanceContainer.resolve(SocketIO)
+    socket.emit('contact-offline', contact_schema.dump(contact))
+
+
+def emit_contact_online(contact):
+    contact_schema = ContactSchema()
+    socket: SocketIO = InstanceContainer.resolve(SocketIO)
+    socket.emit('contact-online', contact_schema.dump(contact))
