@@ -1,61 +1,99 @@
+from app.networking.authentication import Authentication
+from app.networking.topology import Agent, Topology
 from typing import List
-from stem import control
 from stem.process import launch_tor_with_config
 from stem.process import subprocess
 from stem.control import Controller
 import socket
 import socks
-from threading import Thread
-import socketserver
-from abc import ABC, abstractmethod
 from time import sleep
+import select
 
-from app.networking.base import ConnectionSettings, HiddenServiceStartObserver, Packet, PacketHandler, HandleableThreadingTCPServer
+from app.networking.base import ConnectionSettings, HiddenServiceStartObserver, Packet, PacketHandler
 from app.shared.helpful_abstractions import Closable
 from app.shared.config import TorConfiguration
 from app.shared.multithreading import StoppableThread
 
 
 class TorServer(StoppableThread, Closable):
-    def __init__(self, connection_settings: ConnectionSettings, handler: PacketHandler):
+    def __init__(self, connection_settings: ConnectionSettings, handler: PacketHandler, topology: Topology, authentication: Authentication):
         super().__init__()
         self._connection_settings = connection_settings
-        self._tcp_server: socketserver.ThreadingTCPServer = HandleableThreadingTCPServer(self._connection_settings.to_tuple(), TorRequestHandler, handler)
+        self._packet_handler = handler
+        self._topology = topology
+        self._authentication = authentication
+        self._socket = self._setup_server_socket()
+        
 
     def run(self):
-        server_thread = Thread(target=self._tcp_server.serve_forever)
-        server_thread.start()
+        self._socket.listen()
+
+        while True:
+            readers = self._topology.get_all_sockets()
+            writers = self._topology.get_all_sockets()
+            readers.append(self._socket)
+
+            read, write, err = select.select(readers, writers, readers)
+
+            for sock in read:
+                if sock is self._socket:
+                    client_socket, client_address = self._socket.accept()
+                    client_socket.setblocking(0)
+                    self._topology.append(Agent(socket=client_socket, time_since_last_contact=0))
+                else:
+                    data = sock.recv(2048)
+                    agent = self._topology.get_by_socket(sock)
+                    # if sock in topology has empty address:
+                    #   handle first contact - it HAS to be Auth containing source address
+                    if agent.address == "":
+                        packet = Packet(data)
+                        self._authentication.authenticate(agent, packet)
+                    else:
+                        packet = Packet(data, ConnectionSettings(f'{agent.address}.onion', TorConfiguration.get_tor_server_port()))
+                        self._packet_handler.handle(packet)
+            for sock in err:
+                sock.close()
+                self._topology.remove_by_socket(sock)
         
     def close(self):
-        self._tcp_server.shutdown()
+        pass
+
+    def _setup_server_socket(self):
+        socket.socket = socks.socksocket
+        server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        server_socket.setblocking(0)
+        server_socket.bind(self._connection_settings.to_tuple())
+
+        return server_socket
 
 
-class TorClient(StoppableThread, Closable):
-    def __init__(self, packet: Packet):
-        super().__init__()
-        self._packet = packet
-        self._socket = self._create_socket()
+class TorConnection():
+    def __init__(self, socket: socket.socket):
+        self._socket = socket
 
-    def run(self):
-        self._connect()
-        self.send()
-        self.close()
+    def send(self, packet: Packet):
+        self._socket.send(packet.data)
 
-    def close(self):
-        self._socket.close()
 
-    def send(self):
-        self._socket.send(self._packet.data)
+class TorConnectionFactory():
+    def __init__(self, topology: Topology):
+        self._topology = topology
 
-    def _create_socket(self) -> socket.socket:
+    def get_connection(self, address: str):
+        if address not in self._topology:
+            socket = self._create_socket()
+            socket.connect((address, TorConfiguration.get_tor_server_port()))
+            self._topology[address] = Agent(address=address, socket=socket, time_since_last_contact=0.0)
+        else:
+            socket = self._topology[address].socket
+        return TorConnection(socket)
+
+    def _create_socket(self) -> socks.socket:
         socket.socket = socks.socksocket
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         s.set_proxy(socks.PROXY_TYPE_SOCKS5, '127.0.0.1', 9050)
         return s
-
-    def _connect(self):
-        self._socket.connect(self._packet.address.to_tuple())
 
 
 class TorService(StoppableThread, Closable):
@@ -102,12 +140,3 @@ class TorService(StoppableThread, Closable):
             
         print('Service established at %s.onion' % response.service_id)
         self._notify_hidden_service_start_observers()
-
-
-class TorRequestHandler(socketserver.BaseRequestHandler):
-    def handle(self):
-        handler = self.server._packet_handler
-        connection, address = self.request, self.client_address
-        # TODO: make it handle any size received
-        data = connection.recv(65536)
-        handler.handle(Packet(data, ConnectionSettings.from_tuple(address)))
