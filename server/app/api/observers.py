@@ -13,6 +13,6 @@ class TorHiddenServiceStartObserver(HiddenServiceStartObserver):
         approved_addresses = list(map(lambda x: x.address, repository.get_all_approved()))
         broker: Broker = InstanceContainer.resolve(Broker)
         for address in approved_addresses:
-            auth_command = AuthenticationCommand(source=TorConfiguration.get_hidden_service_id())
-            payload = Payload(auth_command, ConnectionSettings(f'{address}.onion', TorConfiguration.get_tor_server_port()))
+            auth_command = AuthenticationCommand()
+            payload = Payload(auth_command, ConnectionSettings(address, TorConfiguration.get_tor_server_port()))
             broker.send(payload)

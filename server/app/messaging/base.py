@@ -1,4 +1,5 @@
 from __future__ import annotations
+from app.networking.base import ConnectionSettings
 from dataclasses import dataclass, InitVar, field
 from dataclasses_json import dataclass_json
 from abc import ABC, abstractmethod
@@ -9,11 +10,20 @@ class Receiver(ABC):
     pass
 
 
+@dataclass(frozen=False)
+class CommandContext:
+    sender: ConnectionSettings = None
+
+    def initialize(self, sender: ConnectionSettings):
+        self.sender = sender
+
+
 @dataclass_json
 @dataclass(frozen=True)
 class Command(ABC):
-    source: str
-    
+    context: InitVar[CommandContext] = field(default=CommandContext(),
+                                             init=False)
+                                             
     @classmethod
     @abstractmethod
     def get_identifier(cls) -> str:

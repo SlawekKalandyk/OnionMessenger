@@ -65,6 +65,7 @@ class Broker(StoppableThread, PacketHandler, Authentication):
         while not self._recv_queue.empty():
             payload: Payload = self._recv_queue.get()
             command, address = payload.command, payload.address
+            command.context.initialize(payload.address)
             responses: Iterable[Command] = self._command_handler.handle(command)
             for response in responses:
                 response_payload = Payload(response, address)

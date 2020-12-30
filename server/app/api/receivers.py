@@ -1,3 +1,4 @@
+from app.networking.topology import Topology
 from dataclasses import dataclass
 
 from app.messaging.base import Receiver
@@ -18,4 +19,10 @@ class HelloCommandReceiver(Receiver):
 
 @dataclass
 class ApproveCommandReceiver(Receiver):
+    contact_repository: ContactRepository
+
+
+@dataclass
+class ImAliveReceiver(Receiver):
+    topology: Topology
     contact_repository: ContactRepository

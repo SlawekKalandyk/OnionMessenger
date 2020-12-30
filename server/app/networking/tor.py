@@ -49,7 +49,7 @@ class TorServer(StoppableThread, Closable):
                         packet = Packet(data)
                         self._authentication.authenticate(agent, packet)
                     else:
-                        packet = Packet(data, ConnectionSettings(f'{agent.address}.onion', TorConfiguration.get_tor_server_port()))
+                        packet = Packet(data, ConnectionSettings(agent.address, TorConfiguration.get_tor_server_port()))
                         self._packet_handler.handle(packet)
             for sock in err:
                 sock.close()
