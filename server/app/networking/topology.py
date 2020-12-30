@@ -1,12 +1,12 @@
 from dataclasses import dataclass
-import socket
+from socket import socket
 from typing import List
 
 
 @dataclass(frozen=False)
 class Agent():
     address: str = ""
-    socket: socket.socket = None
+    socket: socket = None
     time_since_last_contact: float = -1
 
 
@@ -17,13 +17,13 @@ class Topology():
     def append(self, agent: Agent):
         self._agents.append(agent)
 
-    def get_all_sockets(self) -> List[socket.socket]:
+    def get_all_sockets(self) -> List[socket]:
         return list(map(lambda x: x.socket, self._agents))
 
-    def remove_by_socket(self, sock: socket.socket):
+    def remove_by_socket(self, sock: socket):
         agent = self.get_by_socket(sock)
         self._agents.remove(agent)
 
-    def get_by_socket(self, sock: socket.socket):
+    def get_by_socket(self, sock: socket):
         agent = list(filter(lambda x: x.socket is sock), self._agents)[0]
         return agent
