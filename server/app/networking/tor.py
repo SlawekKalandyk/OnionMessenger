@@ -83,7 +83,7 @@ class TorConnectionFactory():
         if address not in self._topology.get_all_nonempty_addresses():
             socket = self._create_socket()
             socket.connect((address, TorConfiguration.get_tor_server_port()))
-            self._topology[address] = Agent(address=address, socket=socket, time_since_last_contact=0.0)
+            self._topology.append(Agent(address=address, socket=socket, time_since_last_contact=0.0))
         else:
             socket = self._topology[address].socket
         return TorConnection(socket)
