@@ -22,7 +22,7 @@ class ConnectionSettings:
 class Packet:
     data: bytes
     # pylint: disable=unsubscriptable-object
-    address: Optional[ConnectionSettings]
+    address: Optional[ConnectionSettings] = None
 
 
 class PacketHandler(ABC):
