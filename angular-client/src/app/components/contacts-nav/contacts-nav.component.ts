@@ -59,7 +59,7 @@ export class ContactsNavComponent implements OnInit {
         name: result.name,
         approved: true,
         awaiting_approval: true,
-        address: result.address,
+        address: result.address + '.onion',
       };
       this.contactService.addContact(contact).subscribe();
     });
