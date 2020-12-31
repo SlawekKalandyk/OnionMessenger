@@ -25,7 +25,7 @@ class Topology():
         self._agents.remove(agent)
 
     def get_by_socket(self, sock: socket):
-        agent = list(filter(lambda x: x.socket is sock), self._agents)[0]
+        agent = list(filter(lambda x: x.socket is sock, self._agents))[0]
         return agent
 
     def get_all_nonempty_addresses(self):
