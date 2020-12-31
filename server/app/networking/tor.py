@@ -80,7 +80,7 @@ class TorConnectionFactory():
         self._topology = topology
 
     def get_connection(self, address: str):
-        if address not in self._topology:
+        if address not in self._topology.get_all_nonempty_addresses():
             socket = self._create_socket()
             socket.connect((address, TorConfiguration.get_tor_server_port()))
             self._topology[address] = Agent(address=address, socket=socket, time_since_last_contact=0.0)
