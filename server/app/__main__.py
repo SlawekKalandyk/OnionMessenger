@@ -1,3 +1,4 @@
+from app.shared.logging import initialize_logging
 from app.messaging.messaging_receivers import AuthenticationReceiver
 from app.messaging.messaging_commands import AuthenticationCommand
 from app.networking.topology import Topology
@@ -34,6 +35,8 @@ def register_commands(command_handler: CommandHandler):
 
 
 def main():
+    initialize_logging()
+
     server_settings = ConnectionSettings('127.0.0.1', 39124)
     command_mapper = CommandMapper()
     register_command_mappings(command_mapper)
@@ -58,8 +61,6 @@ def main():
     InstanceContainer.register_singleton(TorService, tor_service)
     
     InstanceContainer.register_singleton(SocketIO, socketIO)
-
-    # set source for send in a different way than in endpoints (like take it from payload upon receival, may use CommandContext)
     
     socketIO.run(flaskapp)
 

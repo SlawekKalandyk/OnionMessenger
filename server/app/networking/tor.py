@@ -1,3 +1,4 @@
+import logging
 from app.networking.authentication import Authentication
 from app.networking.topology import Agent, Topology
 from typing import List
@@ -23,8 +24,8 @@ class TorServer(StoppableThread, Closable):
         self._topology = topology
         self._authentication = authentication
         self._socket = self._setup_server_socket()
+        self._logger = logging.getLogger(__name__)
         
-
     def run(self):
         self._socket.listen()
 
@@ -74,6 +75,7 @@ class TorServer(StoppableThread, Closable):
 class TorConnection():
     def __init__(self, socket: socket.socket):
         self._socket = socket
+        self._logger = logging.getLogger(__name__)
 
     def send(self, packet: Packet):
         self._socket.send(packet.data)
@@ -82,6 +84,7 @@ class TorConnection():
 class TorConnectionFactory():
     def __init__(self, topology: Topology):
         self._topology = topology
+        self._logger = logging.getLogger(__name__)
 
     def get_connection(self, address: str):
         if address not in self._topology.get_all_nonempty_addresses():
@@ -107,6 +110,7 @@ class TorService(StoppableThread, Closable):
         self._controller: Controller = None
         self._tor: subprocess.Popen = None
         self._hidden_service_start_observers: List(HiddenServiceStartObserver) = []
+        self._logger = logging.getLogger(__name__)
 
     def run(self):
         self._start_hidden_service()
@@ -142,5 +146,5 @@ class TorService(StoppableThread, Closable):
             TorConfiguration.save_hidden_service_key(response.private_key)
             TorConfiguration.save_hidden_service_id(response.service_id)
             
-        print('Service established at %s.onion' % response.service_id)
+        self._logger.info(f'Service established at {response.service_id}.onion')
         self._notify_hidden_service_start_observers()
