@@ -42,15 +42,19 @@ class TorServer(StoppableThread, Closable):
                     self._topology.append(Agent(socket=client_socket, time_since_last_contact=0))
                 else:
                     data = sock.recv(2048)
-                    agent = self._topology.get_by_socket(sock)
-                    # if sock in topology has empty address:
-                    #   handle first contact - it HAS to be Auth containing source address
-                    if agent.address == "":
-                        packet = Packet(data)
-                        self._authentication.authenticate(agent, packet)
+                    if data:
+                        agent = self._topology.get_by_socket(sock)
+                        # if sock in topology has empty address:
+                        #   handle first contact - it HAS to be Auth containing source address
+                        if agent.address == "":
+                            packet = Packet(data)
+                            self._authentication.authenticate(agent, packet)
+                        else:
+                            packet = Packet(data, ConnectionSettings(agent.address, TorConfiguration.get_tor_server_port()))
+                            self._packet_handler.handle(packet)
                     else:
-                        packet = Packet(data, ConnectionSettings(agent.address, TorConfiguration.get_tor_server_port()))
-                        self._packet_handler.handle(packet)
+                        self._topology.remove_by_socket(sock)
+                        sock.close()
             for sock in err:
                 sock.close()
                 self._topology.remove_by_socket(sock)
