@@ -1,6 +1,6 @@
-from __future__ import annotations
+
 from app.messaging.messaging_commands import InitiationCommand
-from dataclasses import dataclass
+from dataclasses import InitVar, dataclass, field
 from dataclasses_json import dataclass_json
 from re import search
 from typing import Any, Dict, List, Tuple
@@ -34,17 +34,29 @@ class MessageCommand(Command):
         return []
 
 
+@dataclass(frozen=False)
+class HelloCommandContext:
+    agent: Agent = None
+
+    def initialize(self, agent: Agent):
+        self.agent = agent
+
 @dataclass_json
 @dataclass(frozen=True)
 class HelloCommand(InitiationCommand):
+    helloContext: InitVar[HelloCommandContext] = field(default=HelloCommandContext(),
+                                             init=False)
+
     @classmethod
     def get_identifier(cls) -> str:
         return 'HELLO'
 
     def invoke(self, receiver: HelloCommandReceiver) -> List[Command]:
-        new_contact = Contact(contact_id=self.source.adress.split('.')[0], approved=False, awaiting_approval=True, address=self.source)
+        print("Inside HelloCommand invoke")
+        new_contact = Contact(contact_id=self.source.split('.')[0], approved=False, awaiting_approval=True, address=self.source)
         receiver.contact_repository.add(new_contact)
         emit_contact(new_contact)
+        self.helloContext.agent.socket.close()
         return []
 
 

@@ -50,9 +50,10 @@ class Broker(StoppableThread, PacketHandler, Authentication):
             agent.address = command.source
             # some form of authentication
         elif isinstance(command, HelloCommand):
-            self._command_handler.handle(command)
+            command.helloContext.initialize(agent)
+            payload = Payload(command, ConnectionSettings(command.source, TorConfiguration.get_tor_server_port()))
+            self._recv_queue.put(payload)
             self._topology.remove_by_socket(agent.socket)
-            agent.socket.close()
 
     def _handle_outgoing(self):
         while not self._send_queue.empty():
