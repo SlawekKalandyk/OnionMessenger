@@ -32,6 +32,10 @@ class Topology():
         agent = list(filter(lambda x: x.socket is sock, self._agents))[0]
         return agent
 
+    def get_by_address(self, address: str) -> Agent:
+        agent = list(filter(lambda x: x.address == address and address != '', self._agents))[0]
+        return agent
+
     def get_all_nonempty_addresses(self):
         addresses_only = list(map(lambda x: x.address, self._agents))
         nonempty_addresses = list(filter(lambda x: x != "", addresses_only))

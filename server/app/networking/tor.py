@@ -98,7 +98,7 @@ class TorConnectionFactory():
             else:
                 self._topology.append(Agent(address=address, socket=socket, time_since_last_contact=0.0))
         else:
-            socket = self._topology[address].socket
+            socket = self._topology.get_by_address(address).socket
         return ActionResult(TorConnection(socket), True)
 
     def _create_socket(self) -> socks.socket:
