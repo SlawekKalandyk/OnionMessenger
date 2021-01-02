@@ -1,7 +1,7 @@
 import logging
 
 logging.getLogger('werkzeug').disabled = True
-logging.getLogger('stem').disabled = True
+# logging.getLogger('stem').disabled = True
 logging.getLogger('peewee').disabled = True
 logging.getLogger('engineio.server').disabled = True
 
