@@ -38,8 +38,10 @@ class TorServer(StoppableThread, Closable):
             read, write, err = select.select(readers, writers, readers)
 
             for sock in read:
+                self._logger.info(f'Incoming data from {sock.getpeername()}')
                 if sock is self._socket:
                     client_socket, client_address = self._socket.accept()
+                    self._logger.info(f'Client address: {client_address}')
                     client_socket.setblocking(0)
                     self._topology.append(Agent(socket=client_socket, time_since_last_contact=0))
                 else:
