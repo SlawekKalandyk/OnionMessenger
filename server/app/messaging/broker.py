@@ -66,8 +66,9 @@ class Broker(StoppableThread, PacketHandler, Authentication):
         while not self._send_queue.empty():
             payload: Payload = self._send_queue.get()
             packet = Packet(self._command_mapper.map_to_bytes(payload.command), payload.address)
-            connection = self._tor_connection_factory.get_connection(payload.address.address)
-            connection.send(packet)
+            connection_action_result = self._tor_connection_factory.get_connection(payload.address.address)
+            if connection_action_result.valid:
+                connection_action_result.value.send(packet)
 
     def _handle_incoming(self):
         while not self._recv_queue.empty():

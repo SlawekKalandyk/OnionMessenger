@@ -1,3 +1,4 @@
+from app.shared.action_result import ActionResult
 import logging
 from app.networking.authentication import Authentication
 from app.networking.topology import Agent, Topology
@@ -89,11 +90,16 @@ class TorConnectionFactory():
     def get_connection(self, address: str):
         if address not in self._topology.get_all_nonempty_addresses():
             socket = self._create_socket()
-            socket.connect((address, TorConfiguration.get_tor_server_port()))
-            self._topology.append(Agent(address=address, socket=socket, time_since_last_contact=0.0))
+            try:
+                socket.connect((address, TorConfiguration.get_tor_server_port()))
+            except socks.GeneralProxyError as err:
+                self._logger.error(f'Could not connect to {address}')
+                return ActionResult(None, False)
+            else:
+                self._topology.append(Agent(address=address, socket=socket, time_since_last_contact=0.0))
         else:
             socket = self._topology[address].socket
-        return TorConnection(socket)
+        return ActionResult(TorConnection(socket), True)
 
     def _create_socket(self) -> socks.socket:
         socket.socket = socks.socksocket
