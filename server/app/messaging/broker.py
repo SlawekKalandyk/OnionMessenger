@@ -54,6 +54,7 @@ class Broker(StoppableThread, PacketHandler, Authentication):
         if isinstance(command, AuthenticationCommand):
             agent.address = command.source
             self._logger.info(f'Authenticated {command.source}')
+            self._logger.info(f'Current topology: {self._topology.get_all_nonempty_addresses()}')
             # some form of authentication
         elif isinstance(command, HelloCommand):
             command.helloContext.initialize(agent)

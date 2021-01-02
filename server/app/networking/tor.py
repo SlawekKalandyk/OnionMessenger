@@ -44,10 +44,12 @@ class TorServer(StoppableThread, Closable):
                     self._topology.append(Agent(socket=client_socket, time_since_last_contact=0))
                 else:
                     data = sock.recv(2048)
+                    decoded = data.decode('utf-8')
+                    self._logger.info(f'Received {decoded}')
                     if data:
                         agent = self._topology.get_by_socket(sock)
                         # if sock in topology has empty address:
-                        #   handle first contact - it HAS to be Auth containing source address
+                        #   handle first contact - command HAS to contain source address
                         if agent.address == "":
                             packet = Packet(data)
                             self._authentication.authenticate(agent, packet)
@@ -79,6 +81,7 @@ class TorConnection():
         self._logger = logging.getLogger(__name__)
 
     def send(self, packet: Packet):
+        self._logger.info(f'Sending data to {packet.address} | {self._socket}')
         self._socket.send(packet.data)
 
 
