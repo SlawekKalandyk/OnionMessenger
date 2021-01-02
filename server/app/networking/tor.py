@@ -20,6 +20,7 @@ from app.shared.multithreading import StoppableThread
 class TorServer(StoppableThread, Closable):
     def __init__(self, connection_settings: ConnectionSettings, handler: PacketHandler, topology: Topology, authentication: Authentication):
         super().__init__()
+        socket.socket = socks.socksocket
         self._connection_settings = connection_settings
         self._packet_handler = handler
         self._topology = topology
@@ -38,7 +39,7 @@ class TorServer(StoppableThread, Closable):
             read, write, err = select.select(readers, writers, readers)
 
             for sock in read:
-                self._logger.info(f'Incoming data from {sock.getpeername()}')
+                self._logger.info(f'Reading from {sock}')
                 if sock is self._socket:
                     client_socket, client_address = self._socket.accept()
                     self._logger.info(f'Client address: {client_address}')
@@ -62,6 +63,7 @@ class TorServer(StoppableThread, Closable):
                         self._topology.remove_by_socket(sock)
                         sock.close()
             for sock in err:
+                self._logger.info(f'Error in {sock}')
                 sock.close()
                 self._topology.remove_by_socket(sock)
         
