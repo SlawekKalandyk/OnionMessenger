@@ -1,5 +1,4 @@
 from __future__ import annotations
-from app.shared.container import InstanceContainer
 from dataclasses import dataclass
 import logging
 from socket import socket

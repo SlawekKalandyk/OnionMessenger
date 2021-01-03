@@ -1,6 +1,3 @@
-from app.networking.base import ConnectionSettings
-from app.shared.container import InstanceContainer
-from app.messaging.broker import Broker, Payload
 from app.networking.topology import Agent
 from typing import List
 from app.shared.config import TorConfiguration
@@ -8,6 +5,7 @@ from app.messaging.messaging_receivers import AuthenticationReceiver
 from app.messaging.base import Command
 from dataclasses import InitVar, dataclass, field
 from dataclasses_json import dataclass_json
+
 
 @dataclass(frozen=False)
 class InitiationCommandContext:
@@ -36,6 +34,5 @@ class AuthenticationCommand(InitiationCommand):
         agent: Agent = self.initiation_context.agent
         if not agent.send_socket:
             auth_command = AuthenticationCommand()
-            broker: Broker = InstanceContainer.resolve(Broker)
-            payload = Payload(auth_command, ConnectionSettings(agent.address, TorConfiguration.get_tor_server_port()))
-            broker.send(payload)
+            return [auth_command]
+        return []
