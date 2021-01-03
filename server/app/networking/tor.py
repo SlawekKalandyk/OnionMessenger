@@ -40,7 +40,6 @@ class TorServer(StoppableThread, Closable):
             read, _, err = select.select(readers, writers, errors)
 
             for sock in read:
-                self._logger.info(f'Reading from {sock}')
                 if sock is self._socket:
                     # accept socket as non-blocking, ignore client_address since in this case it contains no peer data
                     client_socket, _ = self._socket.accept()
@@ -83,8 +82,8 @@ class TorServer(StoppableThread, Closable):
 
 
 class TorConnection():
-    def __init__(self, socket: socket.socket):
-        self._socket = socket
+    def __init__(self, sock: socket.socket):
+        self._socket = sock
         self._logger = logging.getLogger(__name__)
 
     def send(self, packet: Packet):
