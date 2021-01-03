@@ -15,14 +15,10 @@ class MessageCommandReceiver(Receiver):
 @dataclass
 class HelloCommandReceiver(Receiver):
     contact_repository: ContactRepository
+    topology: Topology
 
 
 @dataclass
 class ApproveCommandReceiver(Receiver):
     contact_repository: ContactRepository
-
-
-@dataclass
-class ImAliveReceiver(Receiver):
     topology: Topology
-    contact_repository: ContactRepository

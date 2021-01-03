@@ -24,12 +24,12 @@ def register_command_mappings(command_mapper: CommandMapper):
     command_mapper.register(AuthenticationCommand)
     
 
-def register_commands(command_handler: CommandHandler):
+def register_commands(command_handler: CommandHandler, topology: Topology):
     message_receiver = MessageCommandReceiver(ContactRepository(), MessageRepository())
     command_handler.register(MessageCommand, message_receiver)
-    hello_receiver = HelloCommandReceiver(ContactRepository())
+    hello_receiver = HelloCommandReceiver(ContactRepository(), topology)
     command_handler.register(HelloCommand, hello_receiver)
-    approve_receiver = ApproveCommandReceiver(ContactRepository())
+    approve_receiver = ApproveCommandReceiver(ContactRepository(), topology)
     command_handler.register(ApproveCommand, approve_receiver)
     authentication_receiver = AuthenticationReceiver()
     command_handler.register(AuthenticationCommand, authentication_receiver)
@@ -39,32 +39,27 @@ def main():
     initialize_logging()
 
     server_settings = ConnectionSettings('127.0.0.1', 39124)
+
     command_mapper = CommandMapper()
-    register_command_mappings(command_mapper)
-
     command_handler = CommandHandler(command_mapper)
-    register_commands(command_handler)
-
     topology = Topology()
-    InstanceContainer.register_singleton(Topology, topology)
-
     broker = Broker(command_mapper, command_handler, topology)
-    broker.start()
-    InstanceContainer.register_singleton(Broker, broker)
-
     authenticator = Authenticator(command_mapper, command_handler, broker, topology)
-
     tor_server = TorServer(server_settings, broker, topology, authenticator)
-    tor_server.start()
-    InstanceContainer.register_singleton(TorServer, tor_server)
-
     tor_service = TorService(server_settings)
     tor_service.add_hidden_service_start_observer(TorHiddenServiceStartObserver())
-    tor_service.start()
+    
+    InstanceContainer.register_singleton(Topology, topology)
+    InstanceContainer.register_singleton(Broker, broker)
+    InstanceContainer.register_singleton(TorServer, tor_server)
     InstanceContainer.register_singleton(TorService, tor_service)
-    
     InstanceContainer.register_singleton(SocketIO, socketIO)
-    
+
+    register_command_mappings(command_mapper)
+    register_commands(command_handler, topology)
+    broker.start()
+    tor_server.start()
+    tor_service.start()
     socketIO.run(flaskapp)
 
 if __name__ == '__main__':

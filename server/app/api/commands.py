@@ -4,10 +4,10 @@ from typing import List
 import datetime
 
 from app.messaging.base import Command
-from app.messaging.messaging_commands import InitiationCommand
+from app.messaging.messaging_commands import AuthenticationCommand, InitiationCommand
 from app.infrastructure.message import ContentType, MessageAuthor, MessageState, Message
 from app.infrastructure.contact import Contact
-from app.api.receivers import ImAliveReceiver, MessageCommandReceiver, HelloCommandReceiver, ApproveCommandReceiver
+from app.api.receivers import MessageCommandReceiver, HelloCommandReceiver, ApproveCommandReceiver
 from app.api.socket_emitter import emit_message, emit_contact
 
 
@@ -43,14 +43,16 @@ class HelloCommand(InitiationCommand):
         new_contact = Contact(contact_id=self.source.split('.')[0], approved=False, awaiting_approval=True, address=self.source)
         receiver.contact_repository.add(new_contact)
         emit_contact(new_contact)
+        # close connection - HelloCommand should be single-use only
+        receiver.topology.remove(self.initiation_context.agent)
         self.initiation_context.agent.close_sockets()
         return []
 
 
 @dataclass_json
 @dataclass(frozen=True)
-class ApproveCommand(Command):
-    approved: bool
+class ApproveCommand(InitiationCommand):
+    approved: bool = False
 
     @classmethod
     def get_identifier(cls) -> str:
@@ -58,22 +60,17 @@ class ApproveCommand(Command):
 
     def invoke(self, receiver: ApproveCommandReceiver) -> List[Command]:
         contact = receiver.contact_repository.get_by_address(self.context.sender.address)
-        contact = contact if contact else Contact(contact_id=self.context.sender.address.split('.')[0], address=self.context.sender.address)
+        # if approval was sent from someone who is not in your contacts, ignore it and close sockets
+        if not contact:
+            receiver.topology.remove(self.initiation_context.agent)
+            self.initiation_context.agent.close_sockets()
+            return []
         contact.approved = self.approved
         contact.awaiting_approval = False
         receiver.contact_repository.update(contact)
         emit_contact(contact)
-        return []
-
-
-
-# Change ImAlive to do nothing on invoke, move it to networking and separate into Networking commands and Domain commands
-@dataclass_json
-@dataclass(frozen=True)
-class ImAliveCommand(Command):
-    @classmethod
-    def get_identifier(cls) -> str:
-        return 'IMALIVE'
-    
-    def invoke(self, receiver: ImAliveReceiver) -> List[Command]:
+        # if approved, open socket for sending messages since a receiving one is already open
+        if self.approved:
+            auth_command = AuthenticationCommand()
+            return [auth_command]
         return []
