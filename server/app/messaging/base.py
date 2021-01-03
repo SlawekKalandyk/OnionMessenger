@@ -1,26 +1,36 @@
-from __future__ import annotations
+
+from app.networking.base import ConnectionSettings
 from dataclasses import dataclass, InitVar, field
 from dataclasses_json import dataclass_json
 from abc import ABC, abstractmethod
-from typing import Any, Dict, List, Tuple
+from typing import Dict, Tuple
 from re import search
 
 class Receiver(ABC):
     pass
 
 
+@dataclass(frozen=False)
+class CommandContext:
+    sender: ConnectionSettings = None
+
+    def initialize(self, sender: ConnectionSettings):
+        self.sender = sender
+
+
 @dataclass_json
 @dataclass(frozen=True)
 class Command(ABC):
-    source: str
-    
+    context: InitVar[CommandContext] = field(default=CommandContext(),
+                                             init=False)
+                                             
     @classmethod
     @abstractmethod
     def get_identifier(cls) -> str:
         pass
 
     @abstractmethod
-    def invoke(self, receiver: Receiver) -> List[Command]:
+    def invoke(self, receiver: Receiver):
         pass
 
 
@@ -28,7 +38,7 @@ class CommandMapper:
     def __init__(self):
         self._registered_commands: Dict[str, type] = dict()
 
-    def register(self, command_type: type) -> CommandMapper:
+    def register(self, command_type: type):
         identifier = command_type.get_identifier()
         self._registered_commands[identifier] = command_type
         return self

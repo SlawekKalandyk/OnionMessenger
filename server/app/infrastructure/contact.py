@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from operator import add
 from peewee import BooleanField, TextField
 
 from app.infrastructure.database import BaseModel
@@ -22,6 +23,9 @@ class ContactRepository(metaclass=Singleton):
 
     def get_by_id(self, id: str):
         return Contact.get_or_none(Contact.contact_id == id)
+
+    def get_by_address(self, address: str):
+        return Contact.get_or_none(Contact.address == address)
 
     def get_all(self):
         return [x for x in Contact.select().dicts()]

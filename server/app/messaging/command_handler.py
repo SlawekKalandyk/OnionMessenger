@@ -1,6 +1,6 @@
 from __future__ import annotations
+import logging
 from typing import Any, Dict, Iterable, Optional
-from dataclasses import dataclass
 from abc import ABC, abstractmethod
 
 from app.messaging.base import Command, CommandMapper
@@ -15,6 +15,7 @@ class CommandHandler(BaseCommandHandler):
     def __init__(self, command_mapper: CommandMapper):
         self._registered_types: Dict[type, Any] = dict()
         self._command_mapper = command_mapper
+        self._logger = logging.getLogger(__name__)
 
     def register(self, command_type: type, receiver: Any) -> CommandHandler:
         if receiver is None:
@@ -23,6 +24,7 @@ class CommandHandler(BaseCommandHandler):
         return self
 
     def handle(self, command: Command) -> Iterable[Command]:
+        self._logger.info(f'Handling {command}')
         receiver = self._get_receiver(command)
         responses: Iterable[Command] = command.invoke(receiver)
         if responses:

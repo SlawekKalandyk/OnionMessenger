@@ -21,7 +21,8 @@ class ConnectionSettings:
 @dataclass(frozen=True)
 class Packet:
     data: bytes
-    address: ConnectionSettings
+    # pylint: disable=unsubscriptable-object
+    address: Optional[ConnectionSettings] = None
 
 
 class PacketHandler(ABC):
