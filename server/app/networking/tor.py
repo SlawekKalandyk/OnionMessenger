@@ -51,8 +51,8 @@ class TorServer(StoppableThread, Closable):
                     data = sock.recv(2048)
                     decoded = data.decode('utf-8')
                     self._logger.info(f'Received {decoded}')
+                    agent = self._topology.get_by_socket(sock)
                     if data:
-                        agent = self._topology.get_by_socket(sock)
                         # if sock in topology has empty address:
                         #   handle first contact - command HAS to contain source address
                         if agent.address == "":
@@ -62,8 +62,9 @@ class TorServer(StoppableThread, Closable):
                             packet = Packet(data, ConnectionSettings(agent.address, TorConfiguration.get_tor_server_port()))
                             self._packet_handler.handle(packet)
                     else:
-                        self._topology.remove_by_socket(sock)
-                        sock.close()
+                        # if received data length is 0, it means the socket has been closed on the other side
+                        self._topology.remove(agent)
+                        agent.close_sockets()
             for sock in err:
                 self._logger.error(f'Error in {sock}')
                 self._topology.get_by_socket(sock).close_sockets()
