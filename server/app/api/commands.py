@@ -39,7 +39,6 @@ class HelloCommand(InitiationCommand, SingleUseCommand):
         return 'HELLO'
 
     def invoke(self, receiver: HelloCommandReceiver) -> List[Command]:
-        print("Inside HelloCommand invoke")
         new_contact = Contact(contact_id=self.source.split('.')[0], approved=False, awaiting_approval=True, address=self.source)
         receiver.contact_repository.add(new_contact)
         emit_contact(new_contact)
