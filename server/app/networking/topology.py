@@ -41,6 +41,8 @@ class Topology():
             self._agents.remove(agent)
         except ValueError as err:
             self._logger.error(f'Agent {agent} cannot be removed from topology, he already wasn\'t there')
+        else:
+            self._logger.info(f'Agent {agent.address} removed from topology')
         
     def get_all_sockets(self) -> List[socket]:
         return self.get_all_send_sockets().extend(self.get_all_receive_sockets())
@@ -49,7 +51,6 @@ class Topology():
         agent = self.get_by_socket(sock)
         if agent:
             self._agents.remove(agent)
-            self._logger.info(f'Agent {agent.address} removed from topology')
         else:
             self._logger.error(f'Agent for socket {sock} was not found, cannot be removed')
 

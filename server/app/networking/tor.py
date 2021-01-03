@@ -47,6 +47,9 @@ class TorServer(StoppableThread, Closable):
                     # even if an agent for this socket already exists, put it in topology for now
                     self._topology.append(Agent(receive_socket=client_socket, time_since_last_contact=0))
                 else:
+                    # if file descriptor is -1, it means the socket has been closed
+                    if sock.fileno() == -1:
+                        continue
                     data = sock.recv(2048)
                     agent = self._topology.get_by_socket(sock)
                     if data:
