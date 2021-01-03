@@ -114,7 +114,7 @@ class TorConnectionFactory():
             if agent:
                 agent.send_socket = sock
             else:
-                agent = Agent(address=address, send_socket=socket, time_since_last_contact=0.0)
+                agent = Agent(address=address, send_socket=sock, time_since_last_contact=0.0)
                 self._topology.append(agent)
             return ActionResult(TorConnection(agent.send_socket), True)
 
