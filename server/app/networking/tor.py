@@ -49,7 +49,11 @@ class TorServer(StoppableThread, Closable):
                 else:
                     # if file descriptor is -1, it means the socket has been closed
                     if sock.fileno() == -1:
-                        continue
+                        agent = self._topology.get_by_socket(sock)
+                        if agent:
+                            self._topology.remove(agent)
+                            agent.close_sockets()
+                            
                     data = sock.recv(2048)
                     agent = self._topology.get_by_socket(sock)
                     if data:
