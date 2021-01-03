@@ -1,3 +1,4 @@
+from app.messaging.messaging_commands import SingleUseCommand
 import logging
 from app.networking.topology import Topology
 from queue import Queue
@@ -54,6 +55,10 @@ class Broker(StoppableThread, PacketHandler):
             connection_action_result = self._tor_connection_factory.get_outgoing_connection(payload.address.address)
             if connection_action_result.valid:
                 connection_action_result.value.send(packet)
+                if isinstance(payload.command, SingleUseCommand):
+                    agent = self._topology.get_by_address(payload.address.address)
+                    self._topology.remove(agent)
+                    agent.close_sockets()
 
     def _handle_incoming(self):
         while not self._recv_queue.empty():

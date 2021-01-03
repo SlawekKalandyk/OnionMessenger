@@ -25,6 +25,12 @@ class InitiationCommand(Command):
 
 @dataclass_json
 @dataclass(frozen=True)
+class SingleUseCommand(Command):
+    pass
+
+
+@dataclass_json
+@dataclass(frozen=True)
 class AuthenticationCommand(InitiationCommand):
     @classmethod
     def get_identifier(cls) -> str:

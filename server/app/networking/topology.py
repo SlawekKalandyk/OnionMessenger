@@ -62,6 +62,10 @@ class Topology():
         agents = list(filter(lambda x: x.address == address and address != '', self._agents))
         return agents[0] if agents else None
 
+    def remove_by_address(self, address: str):
+        agent = self.get_by_address(address)
+        self.remove(agent)
+
     def get_all_nonempty_addresses(self):
         addresses_only = list(map(lambda x: x.address, self._agents))
         nonempty_addresses = list(filter(lambda x: x != "", addresses_only))

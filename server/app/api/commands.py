@@ -4,7 +4,7 @@ from typing import List
 import datetime
 
 from app.messaging.base import Command
-from app.messaging.messaging_commands import AuthenticationCommand, InitiationCommand
+from app.messaging.messaging_commands import AuthenticationCommand, InitiationCommand, SingleUseCommand
 from app.infrastructure.message import ContentType, MessageAuthor, MessageState, Message
 from app.infrastructure.contact import Contact
 from app.api.receivers import MessageCommandReceiver, HelloCommandReceiver, ApproveCommandReceiver
@@ -33,7 +33,7 @@ class MessageCommand(Command):
 
 @dataclass_json
 @dataclass(frozen=True)
-class HelloCommand(InitiationCommand):
+class HelloCommand(InitiationCommand, SingleUseCommand):
     @classmethod
     def get_identifier(cls) -> str:
         return 'HELLO'
