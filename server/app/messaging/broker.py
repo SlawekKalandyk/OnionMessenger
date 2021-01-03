@@ -37,6 +37,9 @@ class Broker(StoppableThread, PacketHandler):
 
     def handle(self, packet: Packet):
         payload = Payload(self._command_mapper.map_from_bytes(packet.data), packet.address)
+        self.handle_payload(payload)
+    
+    def handle_payload(self, payload: Payload):
         self._recv_queue.put(payload)
         self._logger.info(f'Queued: {payload.command.__class__.__name__} received from {payload.address}')
 
