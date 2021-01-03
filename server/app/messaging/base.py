@@ -3,7 +3,7 @@ from app.networking.base import ConnectionSettings
 from dataclasses import dataclass, InitVar, field
 from dataclasses_json import dataclass_json
 from abc import ABC, abstractmethod
-from typing import Any, Dict, List, Tuple
+from typing import Dict, Tuple
 from re import search
 
 class Receiver(ABC):

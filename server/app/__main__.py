@@ -1,3 +1,4 @@
+from app.messaging.authenticator import Authenticator
 from app.shared.logging import initialize_logging
 from app.messaging.messaging_receivers import AuthenticationReceiver
 from app.messaging.messaging_commands import AuthenticationCommand
@@ -51,7 +52,9 @@ def main():
     broker.start()
     InstanceContainer.register_singleton(Broker, broker)
 
-    tor_server = TorServer(server_settings, broker, topology, broker)
+    authenticator = Authenticator(command_mapper, command_handler, broker, topology)
+
+    tor_server = TorServer(server_settings, broker, topology, authenticator)
     tor_server.start()
     InstanceContainer.register_singleton(TorServer, tor_server)
 

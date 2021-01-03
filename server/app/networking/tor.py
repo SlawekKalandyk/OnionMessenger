@@ -32,19 +32,21 @@ class TorServer(StoppableThread, Closable):
         self._socket.listen()
 
         while True:
-            readers = self._topology.get_all_sockets()
-            writers = self._topology.get_all_sockets()
+            readers = self._topology.get_all_receive_sockets()
+            writers = self._topology.get_all_send_sockets()
             readers.append(self._socket)
+            errors = readers + writers
 
-            read, write, err = select.select(readers, writers, readers)
+            read, _, err = select.select(readers, writers, errors)
 
             for sock in read:
                 self._logger.info(f'Reading from {sock}')
                 if sock is self._socket:
-                    client_socket, client_address = self._socket.accept()
-                    self._logger.info(f'Client address: {client_address}')
+                    # accept socket as non-blocking, ignore client_address since in this case it contains no peer data
+                    client_socket, _ = self._socket.accept()
                     client_socket.setblocking(0)
-                    self._topology.append(Agent(socket=client_socket, time_since_last_contact=0))
+                    # even if an agent for this socket already exists, put it in topology for now
+                    self._topology.append(Agent(receive_socket=client_socket, time_since_last_contact=0))
                 else:
                     data = sock.recv(2048)
                     decoded = data.decode('utf-8')
@@ -63,8 +65,8 @@ class TorServer(StoppableThread, Closable):
                         self._topology.remove_by_socket(sock)
                         sock.close()
             for sock in err:
-                self._logger.info(f'Error in {sock}')
-                sock.close()
+                self._logger.error(f'Error in {sock}')
+                self._topology.get_by_socket(sock).close_sockets()
                 self._topology.remove_by_socket(sock)
         
     def close(self):
@@ -94,21 +96,27 @@ class TorConnectionFactory():
         self._topology = topology
         self._logger = logging.getLogger(__name__)
 
-    def get_connection(self, address: str):
-        if address not in self._topology.get_all_nonempty_addresses():
-            socket = self._create_socket()
-            try:
-                socket.connect((address, TorConfiguration.get_tor_server_port()))
-            except socks.GeneralProxyError as err:
-                self._logger.error(f'Could not connect to {address}')
-                return ActionResult(None, False)
-            else:
-                self._topology.append(Agent(address=address, socket=socket, time_since_last_contact=0.0))
-        else:
-            socket = self._topology.get_by_address(address).socket
-        return ActionResult(TorConnection(socket), True)
+    def get_outgoing_connection(self, address: str):
+        # check if agent exists, then if send_socket exists return connection
+        agent = self._topology.get_by_address(address)
+        if agent and agent.send_socket:
+            return ActionResult(TorConnection(agent.send_socket), True)
 
-    def _create_socket(self) -> socks.socket:
+        # if we're here then socket doesn't exist
+        sock = self._create_socket()
+        try:
+            sock.connect((address, TorConfiguration.get_tor_server_port()))
+        except socks.GeneralProxyError as err:
+            self._logger.error(f'Could not connect to {address}')
+            return ActionResult(None, False)
+        else:
+            # if agent exists set his send_socket, if not create a new agent
+            if agent:
+                agent.send_socket = sock
+            else:
+                self._topology.append(Agent(address=address, send_socket=socket, time_since_last_contact=0.0))
+
+    def _create_socket(self) -> socket.socket:
         socket.socket = socks.socksocket
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)

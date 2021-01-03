@@ -1,17 +1,14 @@
-
-from app.messaging.messaging_commands import InitiationCommand
-from dataclasses import InitVar, dataclass, field
+from dataclasses import dataclass
 from dataclasses_json import dataclass_json
-from re import search
-from typing import Any, Dict, List, Tuple
+from typing import List
 import datetime
 
-from app.networking.topology import Agent
 from app.messaging.base import Command
+from app.messaging.messaging_commands import InitiationCommand
 from app.infrastructure.message import ContentType, MessageAuthor, MessageState, Message
 from app.infrastructure.contact import Contact
 from app.api.receivers import ImAliveReceiver, MessageCommandReceiver, HelloCommandReceiver, ApproveCommandReceiver
-from app.api.socket_emitter import emit_contact_online, emit_message, emit_contact
+from app.api.socket_emitter import emit_message, emit_contact
 
 
 @dataclass_json
@@ -34,19 +31,9 @@ class MessageCommand(Command):
         return []
 
 
-@dataclass(frozen=False)
-class HelloCommandContext:
-    agent: Agent = None
-
-    def initialize(self, agent: Agent):
-        self.agent = agent
-
 @dataclass_json
 @dataclass(frozen=True)
 class HelloCommand(InitiationCommand):
-    helloContext: InitVar[HelloCommandContext] = field(default=HelloCommandContext(),
-                                             init=False)
-
     @classmethod
     def get_identifier(cls) -> str:
         return 'HELLO'
@@ -56,7 +43,7 @@ class HelloCommand(InitiationCommand):
         new_contact = Contact(contact_id=self.source.split('.')[0], approved=False, awaiting_approval=True, address=self.source)
         receiver.contact_repository.add(new_contact)
         emit_contact(new_contact)
-        self.helloContext.agent.socket.close()
+        self.initiation_context.agent.close_sockets()
         return []
 
 

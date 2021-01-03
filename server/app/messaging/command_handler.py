@@ -1,7 +1,6 @@
 from __future__ import annotations
 import logging
 from typing import Any, Dict, Iterable, Optional
-from dataclasses import dataclass
 from abc import ABC, abstractmethod
 
 from app.messaging.base import Command, CommandMapper
