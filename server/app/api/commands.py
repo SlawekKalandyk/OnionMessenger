@@ -42,10 +42,6 @@ class HelloCommand(InitiationCommand, SingleUseCommand):
         return 'HELLO'
 
     def invoke(self, receiver: HelloCommandReceiver) -> List[Command]:
-        if not self._verify(self.public_key, self.signed_message):
-            receiver.topology.remove(self.initiation_context.agent)
-            self.initiation_context.agent.close_sockets()
-            return []
         new_contact = Contact(contact_id=self.source.split('.')[0], approved=False, awaiting_approval=True, address=self.source, signature_public_key=self.public_key)
         receiver.contact_repository.add(new_contact)
         emit_contact(new_contact)
@@ -58,6 +54,8 @@ class HelloCommand(InitiationCommand, SingleUseCommand):
 @dataclass_json
 @dataclass(frozen=True)
 class AuthenticationCommand(InitiationCommand):
+    signed_message: str = Signature().sign('AUTHENTICATION')
+
     @classmethod
     def get_identifier(cls) -> str:
         return 'AUTHENTICATION'
@@ -74,6 +72,10 @@ class AuthenticationCommand(InitiationCommand):
             return [auth_command]
         return []
 
+    def _verify(self, public_key: str,  signed_message: str) -> bool:
+        signature = Signature()
+        return signature.verify(public_key, signed_message) == self.get_identifier()
+
 
 @dataclass_json
 @dataclass(frozen=True)
@@ -87,13 +89,12 @@ class ApproveCommand(InitiationCommand):
 
     def invoke(self, receiver: ApproveCommandReceiver) -> List[Command]:
         contact = receiver.contact_repository.get_by_address(self.context.sender.address)
-        if contact:
-            contact.signature_public_key = self.public_key
         # if approval was sent from someone who is not in your contacts, ignore it and close sockets
-        if not contact or not self._verify(contact.signature_public_key, self.signed_message):
+        if not contact:
             receiver.topology.remove(self.initiation_context.agent)
             self.initiation_context.agent.close_sockets()
             return []
+        contact.signature_public_key = self.public_key
         contact.approved = self.approved
         contact.awaiting_approval = False
         receiver.contact_repository.update(contact)
