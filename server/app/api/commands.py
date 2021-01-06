@@ -79,6 +79,7 @@ class AuthenticationCommand(InitiationCommand):
 @dataclass(frozen=True)
 class ApproveCommand(InitiationCommand):
     approved: bool = False
+    public_key: str = Signature().get_public_key()
 
     @classmethod
     def get_identifier(cls) -> str:
@@ -86,6 +87,8 @@ class ApproveCommand(InitiationCommand):
 
     def invoke(self, receiver: ApproveCommandReceiver) -> List[Command]:
         contact = receiver.contact_repository.get_by_address(self.context.sender.address)
+        if contact:
+            contact.signature_public_key = self.public_key
         # if approval was sent from someone who is not in your contacts, ignore it and close sockets
         if not contact or not self._verify(contact.signature_public_key, self.signed_message):
             receiver.topology.remove(self.initiation_context.agent)
