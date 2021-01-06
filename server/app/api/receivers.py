@@ -22,3 +22,9 @@ class HelloCommandReceiver(Receiver):
 class ApproveCommandReceiver(Receiver):
     contact_repository: ContactRepository
     topology: Topology
+
+
+@dataclass
+class AuthenticationReceiver(Receiver):
+    contact_repository: ContactRepository
+    topology: Topology
