@@ -1,15 +1,13 @@
 from app.messaging.authenticator import Authenticator
 from app.shared.logging import initialize_logging
-from app.messaging.messaging_receivers import AuthenticationReceiver
-from app.messaging.messaging_commands import AuthenticationCommand
 from app.networking.topology import Topology
 from app.api.observers import TorHiddenServiceStartObserver
 from app.infrastructure.message import MessageRepository
 from app.infrastructure.contact import ContactRepository
-from app.api.receivers import ApproveCommandReceiver, HelloCommandReceiver, MessageCommandReceiver
+from app.api.receivers import ApproveCommandReceiver, AuthenticationReceiver, HelloCommandReceiver, MessageCommandReceiver
 from app.networking.tor import TorServer, TorService
 from app.networking.base import ConnectionSettings
-from app.api.commands import ApproveCommand, HelloCommand, MessageCommand
+from app.api.commands import ApproveCommand, AuthenticationCommand, HelloCommand, MessageCommand
 from app.messaging.base import CommandMapper
 from app.messaging.command_handler import CommandHandler
 from app.messaging.broker import Broker
@@ -31,7 +29,7 @@ def register_commands(command_handler: CommandHandler, topology: Topology):
     command_handler.register(HelloCommand, hello_receiver)
     approve_receiver = ApproveCommandReceiver(ContactRepository(), topology)
     command_handler.register(ApproveCommand, approve_receiver)
-    authentication_receiver = AuthenticationReceiver()
+    authentication_receiver = AuthenticationReceiver(ContactRepository(), topology)
     command_handler.register(AuthenticationCommand, authentication_receiver)
 
 

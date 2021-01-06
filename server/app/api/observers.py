@@ -2,9 +2,9 @@ import logging
 from app.shared.config import TorConfiguration
 from app.messaging.broker import Broker, Payload
 from app.shared.container import InstanceContainer
-from app.messaging.messaging_commands import AuthenticationCommand
 from app.infrastructure.contact import ContactRepository
 from app.api.socket_emitter import emit_service_start
+from app.api.commands import AuthenticationCommand
 from app.networking.base import ConnectionSettings, HiddenServiceStartObserver
 
 class TorHiddenServiceStartObserver(HiddenServiceStartObserver):
