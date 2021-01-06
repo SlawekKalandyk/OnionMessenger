@@ -53,7 +53,7 @@ class TorServer(StoppableThread, Closable):
                         if agent:
                             self._topology.remove(agent)
                             agent.close_sockets()
-                            continue
+                        continue
                             
                     data = sock.recv(2048)
                     agent = self._topology.get_by_socket(sock)
