@@ -15,6 +15,11 @@ def emit_contact(contact):
     socket: SocketIO = InstanceContainer.resolve(SocketIO)
     socket.emit('contact', contact_schema.dump(contact))
 
+def emit_new_contact(contact):
+    contact_schema = ContactSchema()
+    socket: SocketIO = InstanceContainer.resolve(SocketIO)
+    socket.emit('new-contact', contact_schema.dump(contact))
+
 
 def emit_service_start():
     socket: SocketIO = InstanceContainer.resolve(SocketIO)
