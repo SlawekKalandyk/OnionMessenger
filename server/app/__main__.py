@@ -1,7 +1,7 @@
 from app.messaging.authenticator import Authenticator
 from app.shared.logging import initialize_logging
 from app.networking.topology import Topology
-from app.api.observers import TorHiddenServiceStartObserver
+from app.api.observers import OfflineEmitterAgentRemoveCallback, OfflineEmitterConnectionFailureCallback, TorHiddenServiceStartObserver
 from app.infrastructure.message import MessageRepository
 from app.infrastructure.contact import ContactRepository
 from app.api.receivers import ApproveCommandReceiver, AuthenticationReceiver, HelloCommandReceiver, MessageCommandReceiver
@@ -40,8 +40,8 @@ def main():
 
     command_mapper = CommandMapper()
     command_handler = CommandHandler(command_mapper)
-    topology = Topology()
-    broker = Broker(command_mapper, command_handler, topology)
+    topology = Topology(OfflineEmitterAgentRemoveCallback())
+    broker = Broker(command_mapper, command_handler, topology, OfflineEmitterConnectionFailureCallback())
     authenticator = Authenticator(command_mapper, command_handler, broker, topology)
     tor_server = TorServer(server_settings, broker, topology, authenticator)
     tor_service = TorService(server_settings)

@@ -38,4 +38,28 @@ export class SocketService {
       });
     });
   }
+
+  getNewContact(): Observable<ContactDto> {
+    return new Observable(observer => {
+      this.socket.on('new-contact', (contact: ContactDto) => {
+        observer.next(contact);
+      });
+    });
+  }
+
+  getContactOnline(): Observable<ContactDto> {
+    return new Observable(observer => {
+      this.socket.on('contact-online', (contact: ContactDto) => {
+        observer.next(contact);
+      });
+    });
+  }
+
+  getContactOffline(): Observable<ContactDto> {
+    return new Observable(observer => {
+      this.socket.on('contact-offline', (contact: ContactDto) => {
+        observer.next(contact);
+      });
+    });
+  }
 }

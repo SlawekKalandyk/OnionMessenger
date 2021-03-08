@@ -11,7 +11,7 @@ from app.messaging.messaging_commands import InitiationCommand, SingleUseCommand
 from app.infrastructure.message import ContentType, MessageAuthor, MessageState, Message
 from app.infrastructure.contact import Contact
 from app.api.receivers import AuthenticationReceiver, MessageCommandReceiver, HelloCommandReceiver, ApproveCommandReceiver
-from app.api.socket_emitter import emit_message, emit_contact
+from app.api.socket_emitter import emit_contact_online, emit_message, emit_contact
 
 
 @dataclass_json
@@ -73,6 +73,7 @@ class AuthenticationCommand(InitiationCommand):
             return []
 
         # if there's no outgoing connection, create one
+        emit_contact_online(contact)
         if not self.initiation_context.agent.send_socket:
             auth_command = AuthenticationCommand()
             return [auth_command]
@@ -108,6 +109,7 @@ class ApproveCommand(InitiationCommand):
         contact.awaiting_approval = False
         receiver.contact_repository.update(contact)
         emit_contact(contact)
+        emit_contact_online(contact)
         # if approved, open socket for sending messages since a receiving one is already open
         if self.approved:
             auth_command = AuthenticationCommand()

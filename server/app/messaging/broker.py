@@ -1,3 +1,4 @@
+from abc import ABC, abstractmethod
 from app.messaging.messaging_commands import SingleUseCommand
 import logging
 from app.networking.topology import Topology
@@ -19,8 +20,14 @@ class Payload:
     address: ConnectionSettings
 
 
+class ConnectionFailureCallback(ABC):
+    @abstractmethod
+    def on_connection_failure(self, address: str):
+        pass
+
+
 class Broker(StoppableThread, PacketHandler):
-    def __init__(self, command_mapper: CommandMapper, command_handler: BaseCommandHandler, topology: Topology):
+    def __init__(self, command_mapper: CommandMapper, command_handler: BaseCommandHandler, topology: Topology, connection_failure_callback: ConnectionFailureCallback = None):
         super().__init__()
         self._send_queue = Queue()
         self._recv_queue = Queue()
@@ -28,6 +35,7 @@ class Broker(StoppableThread, PacketHandler):
         self._command_handler = command_handler
         self._topology = topology
         self._tor_connection_factory = TorConnectionFactory(topology)
+        self._connection_failure_callback = connection_failure_callback
         self._logger = logging.getLogger(__name__)
 
     def run(self):
@@ -59,6 +67,9 @@ class Broker(StoppableThread, PacketHandler):
                     agent = self._topology.get_by_address(payload.address.address)
                     self._topology.remove(agent)
                     agent.close_sockets()
+            else:
+                if self._connection_failure_callback:
+                    self._connection_failure_callback.on_connection_failure(payload.address.address)
 
     def _handle_incoming(self):
         while not self._recv_queue.empty():
