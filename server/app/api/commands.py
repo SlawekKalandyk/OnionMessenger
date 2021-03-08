@@ -1,3 +1,5 @@
+from app.shared.utility import get_onion_address_from_public_key
+from app.shared.config import TorConfiguration
 from app.shared.signature import Signature
 from dataclasses import dataclass
 from dataclasses_json import dataclass_json
@@ -35,27 +37,30 @@ class MessageCommand(Command):
 @dataclass_json
 @dataclass(frozen=True)
 class HelloCommand(InitiationCommand, SingleUseCommand):
-    public_key: str = Signature().get_public_key()
+    public_key: str = TorConfiguration.get_hidden_service_public_key()
 
     @classmethod
     def get_identifier(cls) -> str:
         return 'HELLO'
 
     def invoke(self, receiver: HelloCommandReceiver) -> List[Command]:
-        new_contact = Contact(contact_id=self.source.split('.')[0], approved=False, awaiting_approval=True, address=self.source, signature_public_key=self.public_key)
+        # if address derived from public key is not equal to received source address or signature can't be verified with received public key, ignore it and close sockets
+        derived_address = get_onion_address_from_public_key(self.public_key)
+        if derived_address != self.source or not Signature.verify(self.public_key, self.signed_uuid):
+            self._close_sockets(receiver.topology, self.initiation_context.agent)
+            return []
+
+        new_contact = Contact(contact_id=self.source.split('.')[0], approved=False, awaiting_approval=True, address=self.source, public_key=self.public_key)
         receiver.contact_repository.add(new_contact)
         emit_contact(new_contact)
         # close connection - HelloCommand should be single-use only
-        receiver.topology.remove(self.initiation_context.agent)
-        self.initiation_context.agent.close_sockets()
+        self._close_sockets(receiver.topology, self.initiation_context.agent)
         return []
 
 
 @dataclass_json
 @dataclass(frozen=True)
 class AuthenticationCommand(InitiationCommand):
-    signed_message: str = Signature().sign('AUTHENTICATION')
-
     @classmethod
     def get_identifier(cls) -> str:
         return 'AUTHENTICATION'
@@ -63,38 +68,42 @@ class AuthenticationCommand(InitiationCommand):
     def invoke(self, receiver: AuthenticationReceiver) -> List[Command]:
         contact = receiver.contact_repository.get_by_address(self.context.sender.address)
         # if authentication was sent from someone who is not in your contacts, ignore it and close sockets
-        if not contact or not self._verify(contact.signature_public_key, self.signed_message):
-            receiver.topology.remove(self.initiation_context.agent)
-            self.initiation_context.agent.close_sockets()
+        if not contact or not Signature.verify(contact.public_key, self.signed_uuid):
+            self._close_sockets(receiver.topology, self.initiation_context.agent)
             return []
+
+        # if there's no outgoing connection, create one
         if not self.initiation_context.agent.send_socket:
             auth_command = AuthenticationCommand()
             return [auth_command]
-        return []
 
-    def _verify(self, public_key: str,  signed_message: str) -> bool:
-        signature = Signature()
-        return signature.verify(public_key, signed_message) == self.get_identifier()
+        return []
 
 
 @dataclass_json
 @dataclass(frozen=True)
 class ApproveCommand(InitiationCommand):
     approved: bool = False
-    public_key: str = Signature().get_public_key()
+    public_key: str = TorConfiguration.get_hidden_service_public_key()
 
     @classmethod
     def get_identifier(cls) -> str:
         return 'APPROVE'
 
     def invoke(self, receiver: ApproveCommandReceiver) -> List[Command]:
-        contact = receiver.contact_repository.get_by_address(self.context.sender.address)
-        # if approval was sent from someone who is not in your contacts, ignore it and close sockets
-        if not contact:
-            receiver.topology.remove(self.initiation_context.agent)
-            self.initiation_context.agent.close_sockets()
+        # if address derived from public key is not equal to received source address or signature can't be verified with received public key, ignore it and close sockets
+        derived_address = get_onion_address_from_public_key(self.public_key)
+        if derived_address != self.source or not Signature.verify(self.public_key, self.signed_uuid):
+            self._close_sockets(receiver.topology, self.initiation_context.agent)
             return []
-        contact.signature_public_key = self.public_key
+
+        # if approval was sent from someone who is not in your contacts, ignore it and close sockets
+        contact = receiver.contact_repository.get_by_address(self.context.sender.address)
+        if not contact:
+            self._close_sockets(receiver.topology, self.initiation_context.agent)
+            return []
+
+        contact.public_key = self.public_key
         contact.approved = self.approved
         contact.awaiting_approval = False
         receiver.contact_repository.update(contact)

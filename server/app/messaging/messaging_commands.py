@@ -1,3 +1,4 @@
+from app.shared.utility import generate_random_guid
 from app.shared.signature import Signature
 from app.networking.topology import Agent
 from typing import List
@@ -19,6 +20,7 @@ class InitiationCommandContext:
 @dataclass(frozen=True)
 class InitiationCommand(Command):
     source: str = f'{TorConfiguration.get_hidden_service_id()}.onion'
+    signed_uuid: str = Signature.sign(TorConfiguration.get_hidden_service_private_key(), generate_random_guid())
     initiation_context: InitVar[InitiationCommandContext] = field(default=InitiationCommandContext(),
                                                                 init=False)
 

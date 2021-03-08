@@ -1,3 +1,5 @@
+from app.shared.utility import stem_compatible_base64_blob_from_private_key
+from app.shared.signature import Signature
 from app.shared.action_result import ActionResult
 import logging
 from app.networking.authentication import Authentication
@@ -166,13 +168,18 @@ class TorService(StoppableThread, Closable):
         })
         self._controller = Controller.from_port()
         self._controller.authenticate()
-        key = TorConfiguration.get_hidden_service_key()
-        key_type = 'ED25519-V3' if key else 'NEW'
-        key_content = key if key else 'ED25519-V3'
+        private_key = TorConfiguration.get_hidden_service_private_key()
+        is_new_user = private_key == None
+        if is_new_user:
+            private_key, public_key = Signature.generate_keys()
+            TorConfiguration.save_hidden_service_private_key(private_key)
+            TorConfiguration.save_hidden_service_public_key(public_key)
+
+        key_content = stem_compatible_base64_blob_from_private_key(bytes(private_key, 'utf-8'))
         response = self._controller.create_ephemeral_hidden_service(ports={TorConfiguration.get_tor_server_port(): self._connection_settings.port}, await_publication=True, \
-            key_type=key_type, key_content=key_content)
-        if not key:
-            TorConfiguration.save_hidden_service_key(response.private_key)
+            key_type='ED25519-V3', key_content=key_content)
+            
+        if is_new_user:
             TorConfiguration.save_hidden_service_id(response.service_id)
             
         self._logger.info(f'Service established at {response.service_id}.onion')

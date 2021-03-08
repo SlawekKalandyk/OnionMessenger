@@ -1,4 +1,5 @@
 
+from app.networking.topology import Agent, Topology
 from app.networking.base import ConnectionSettings
 from dataclasses import dataclass, InitVar, field
 from dataclasses_json import dataclass_json
@@ -32,6 +33,10 @@ class Command(ABC):
     @abstractmethod
     def invoke(self, receiver: Receiver):
         pass
+
+    def _close_sockets(self, topology: Topology, agent: Agent):
+        topology.remove(agent)
+        agent.close_sockets()
 
 
 class CommandMapper:

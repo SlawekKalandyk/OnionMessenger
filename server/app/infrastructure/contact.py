@@ -12,7 +12,7 @@ class Contact(BaseModel):
     approved = BooleanField()
     awaiting_approval = BooleanField()
     address = TextField()
-    signature_public_key = TextField(null=True)
+    public_key = TextField(null=True)
 
 
 class ContactRepository(metaclass=Singleton):
