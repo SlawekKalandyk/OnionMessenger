@@ -1,9 +1,8 @@
+from app.shared.signature import Signature
 import base64
 import uuid
 import hashlib
 from hashlib import sha3_256
-
-from nacl.encoding import Base32Encoder
 
 
 def generate_random_guid() -> str:
@@ -11,15 +10,15 @@ def generate_random_guid() -> str:
 
 
 def get_onion_address_from_public_key(public_key: str) -> str:
-    constant = bytes(".onion checksum", "utf-8")
-    pub = bytes(public_key, "utf-8")
+    constant = b".onion checksum"
+    pub = Signature.encode_key_to_bytes(public_key)
     version = b'\x03'
     checksum = sha3_256(constant + pub + version).digest()[:2]
-    address = Base32Encoder.encode(pub + checksum + version).decode().lower()
-    return address + ".onion"
+    address = base64.b32encode(pub + checksum + version).decode().lower()
+    return f"{address}.onion"
 
 
-def stem_compatible_base64_blob_from_private_key(private_key: bytes) -> str:
+def stem_compatible_base64_blob_from_private_key(private_key: str) -> str:
     b = 256
 
     def bit(h: bytes, i: int) -> int:
@@ -36,5 +35,6 @@ def stem_compatible_base64_blob_from_private_key(private_key: bytes) -> str:
         assert len(k) == 32
         return encode_int(a) + k
 
-    expanded_private_key = expand_private_key(private_key)
+    private_key_as_bytes = Signature.encode_key_to_bytes(private_key)
+    expanded_private_key = expand_private_key(private_key_as_bytes)
     return base64.b64encode(expanded_private_key).decode()

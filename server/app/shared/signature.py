@@ -29,12 +29,26 @@ class Signature:
         except BadSignatureError:
             return None
         else:
-            return message.decode('utf-8')
+            return message.decode()
 
     @staticmethod
     def generate_keys() -> Tuple[str, str]:
+        """
+        Generate ED25519 private and public key
+        """
         signing_key = SigningKey.generate()
-        private_key, public_key = signing_key.encode(encoder=Signature._encoder), signing_key.verify_key.encode(encoder=Signature._encoder)
-        private_key_as_str = private_key.decode('utf-8')
-        public_key_as_str = public_key.decode('utf-8')
-        return private_key_as_str, public_key_as_str
+        private_key_as_bytes, public_key_as_bytes = signing_key.encode(encoder=Signature._encoder), signing_key.verify_key.encode(encoder=Signature._encoder)
+        private_key, public_key = private_key_as_bytes.decode(), public_key_as_bytes.decode()
+        return private_key, public_key
+
+    @staticmethod
+    def encode_key_to_bytes(key: str) -> bytes:
+        as_bytes = key.encode()
+        as_encoded_bytes = Signature._encoder.decode(as_bytes)
+        return as_encoded_bytes
+
+    @staticmethod
+    def decode_key_from_bytes(as_bytes: bytes) -> str:
+        as_encoded_bytes = Signature._encoder.encode(as_bytes)
+        key = as_encoded_bytes.decode()
+        return key

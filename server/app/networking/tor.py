@@ -175,7 +175,7 @@ class TorService(StoppableThread, Closable):
             TorConfiguration.save_hidden_service_private_key(private_key)
             TorConfiguration.save_hidden_service_public_key(public_key)
 
-        key_content = stem_compatible_base64_blob_from_private_key(bytes(private_key, 'utf-8'))
+        key_content = stem_compatible_base64_blob_from_private_key(private_key)
         response = self._controller.create_ephemeral_hidden_service(ports={TorConfiguration.get_tor_server_port(): self._connection_settings.port}, await_publication=True, \
             key_type='ED25519-V3', key_content=key_content)
             
