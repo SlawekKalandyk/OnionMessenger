@@ -24,6 +24,8 @@ export class ContactsNavComponent implements OnInit {
 
   ngOnInit(): void {
     this.contactService.getAllApprovedContacts().subscribe(response => this.contacts = response.map(contactDto => this.mappingService.mapContactDtoToContact(contactDto)));
+    this.contacts.forEach(c => c.online = ContactState.undetermined);
+    
     if (this.contacts.length > 0) {
       this.currentContactService.currentContact = of(this.contacts[0]);
     }
