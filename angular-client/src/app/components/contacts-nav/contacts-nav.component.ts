@@ -4,7 +4,7 @@ import { of } from 'rxjs';
 import { ContactDto } from 'src/app/data-transfer/contact-dto';
 import { AddContactDialogData } from 'src/app/dialogs/add-contact-dialog/add-contact-dialog-data';
 import { AddContactDialogComponent } from 'src/app/dialogs/add-contact-dialog/add-contact-dialog.component';
-import { Contact } from 'src/app/model/contact';
+import { Contact, ContactState } from 'src/app/model/contact';
 import { ContactService } from 'src/app/services/contact-service/contact.service';
 import { CurrentContactService } from 'src/app/services/current-contact-service/current-contact.service';
 import { DtoMappingService } from 'src/app/services/dto-mapping-service/dto-mapping.service';
@@ -37,6 +37,7 @@ export class ContactsNavComponent implements OnInit {
         if (existingContactIndex > -1) {
           this.contacts[existingContactIndex] = newContact;
         } else {
+          newContact.online = ContactState.online;
           this.contacts.push(newContact);
         }
       }
