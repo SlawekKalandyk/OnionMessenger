@@ -21,25 +21,20 @@ export class PendingContactsComponent implements OnInit {
       this.waitingForUserApprovalContacts = allContacts.filter(contact => !contact.approved)
       this.waitingForInterlocutorApprovalContacts = allContacts.filter(contact => contact.approved);
     });
-    this.socketService.getContacts().subscribe(contactDto => {
-      if (contactDto.awaiting_approval === true) {
-        let contact = this.mappingService.mapContactDtoToContact(contactDto);
-        if (contact.approved) {
-          this.waitingForInterlocutorApprovalContacts.push(contact);
-        } else {
-          this.waitingForUserApprovalContacts.push(contact);
-        }
-      } else {
-        let index1 = this.waitingForUserApprovalContacts.findIndex(contact => contact.contact_id === contactDto.contact_id);
-        let index2 = this.waitingForInterlocutorApprovalContacts.findIndex(contact => contact.contact_id === contactDto.contact_id);
-        if (index1 > -1) {
-          this.waitingForUserApprovalContacts.splice(index1, 1);
-        }
-        if (index2 > -1) {
-          this.waitingForInterlocutorApprovalContacts.splice(index2, 1);
-        }
-      }
-    })
-  }
 
+    this.socketService.getNewContactPendingInterlocutorApproval().subscribe(contact => {
+      this.waitingForInterlocutorApprovalContacts.push(contact);
+    });
+
+    this.socketService.getNewContactPendingSelfApproval().subscribe(contact => {
+      this.waitingForUserApprovalContacts.push(contact);
+    });
+
+    this.socketService.getNewlyNotApprovedContact().subscribe(contact => {
+      let contactIndex = this.waitingForUserApprovalContacts.findIndex(c => c.contact_id == contact.contact_id);
+      if (contactIndex > -1) {
+        this.waitingForUserApprovalContacts.splice(contactIndex, 1);
+      }
+    });
+  }
 }

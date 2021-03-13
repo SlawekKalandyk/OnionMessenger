@@ -11,7 +11,7 @@ from app.messaging.messaging_commands import InitiationCommand, SingleUseCommand
 from app.infrastructure.message import ContentType, MessageAuthor, MessageState, Message
 from app.infrastructure.contact import Contact
 from app.api.receivers import AuthenticationReceiver, MessageCommandReceiver, HelloCommandReceiver, ApproveCommandReceiver
-from app.api.socket_emitter import emit_contact_online, emit_message, emit_contact
+from app.api.socket_emitter import emit_contact_online, emit_message, emit_new_contact_pending_self_approval, emit_newly_approved_contact
 
 
 @dataclass_json
@@ -52,7 +52,7 @@ class HelloCommand(InitiationCommand, SingleUseCommand):
 
         new_contact = Contact(contact_id=self.source.split('.')[0], approved=False, awaiting_approval=True, address=self.source, public_key=self.public_key)
         receiver.contact_repository.add(new_contact)
-        emit_contact(new_contact)
+        emit_new_contact_pending_self_approval(new_contact)
         # close connection - HelloCommand should be single-use only
         self._close_sockets(receiver.topology, self.initiation_context.agent)
         return []
@@ -108,10 +108,12 @@ class ApproveCommand(InitiationCommand):
         contact.approved = self.approved
         contact.awaiting_approval = False
         receiver.contact_repository.update(contact)
-        emit_contact(contact)
-        emit_contact_online(contact)
+        
         # if approved, open socket for sending messages since a receiving one is already open
         if self.approved:
+            emit_newly_approved_contact(contact)
             auth_command = AuthenticationCommand()
             return [auth_command]
+        # TODO: What to do when the other person disapproves? Give option to resend/remove?
+        
         return []

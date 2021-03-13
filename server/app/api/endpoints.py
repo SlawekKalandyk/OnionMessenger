@@ -1,3 +1,4 @@
+from app.networking.topology import Agent, Topology
 from flask import Flask, g, request, jsonify
 from flask_cors import CORS
 from flask_socketio import SocketIO
@@ -5,7 +6,7 @@ from marshmallow import ValidationError
 
 from app.messaging.broker import Broker, Payload
 from app.api.commands import ApproveCommand, HelloCommand, MessageCommand
-from app.api.socket_emitter import emit_contact, emit_message
+from app.api.socket_emitter import emit_message, emit_new_contact_pending_interlocutor_approval, emit_newly_approved_contact, emit_newly_not_approved_contact
 from app.shared.container import InstanceContainer
 from app.shared.config import TorConfiguration
 from app.networking.base import ConnectionSettings
@@ -70,13 +71,13 @@ def add_contact():
     
     repository.add(contact)
     
-    broker = InstanceContainer.resolve(Broker)
+    broker: Broker = InstanceContainer.resolve(Broker)
     command = HelloCommand()
     address = ConnectionSettings(contact.address, TorConfiguration.get_tor_server_port())
     payload = Payload(command, address)
     broker.send(payload)
 
-    emit_contact(contact)
+    emit_new_contact_pending_interlocutor_approval(contact)
     
     return contact_json, 201
 
@@ -170,13 +171,22 @@ def approve_contact_for_further_communication(id):
     contact.awaiting_approval = False
     repository.update(contact)
 
-    broker = InstanceContainer.resolve(Broker)
+    broker: Broker = InstanceContainer.resolve(Broker)
     command = ApproveCommand(approved=is_approved)
     address = ConnectionSettings(contact.address, TorConfiguration.get_tor_server_port())
     payload = Payload(command, address)
     broker.send(payload)
 
-    emit_contact(contact)
+    if is_approved:
+        emit_newly_approved_contact(contact)
+    else:
+        # if not approved, remove contact, close connection after sending ApproveCommand
+        topology: Topology = InstanceContainer.resolve(Topology)
+        agent: Agent = topology.get_by_address(contact.address)
+        topology.remove(agent)
+        agent.close_sockets()
+        repository.remove(contact)
+        emit_newly_not_approved_contact(contact)
 
     return {}, 204
 
@@ -192,7 +202,7 @@ def send_message():
     repository = MessageRepository()
     repository.add(message)
     
-    broker = InstanceContainer.resolve(Broker)
+    broker: Broker = InstanceContainer.resolve(Broker)
     command = MessageCommand(content=message.content, content_type=message.content_type)
     address = ConnectionSettings(message.interlocutor.address, TorConfiguration.get_tor_server_port())
     payload = Payload(command, address)

@@ -46,16 +46,14 @@ class Topology():
 
     def remove(self, agent: Agent):
         try:
+            agent.close_sockets()
             self._agents.remove(agent)
-        except ValueError as err:
+        except ValueError:
             self._logger.error(f'Agent {agent} cannot be removed from topology, he already wasn\'t there')
         else:
             if self._removal_callback:
                 self._removal_callback.on_agent_removed(agent)
             self._logger.info(f'Agent {agent.address} removed from topology')
-        
-    def get_all_sockets(self) -> List[socket]:
-        return self.get_all_send_sockets().extend(self.get_all_receive_sockets())
 
     def remove_by_socket(self, sock: socket):
         agent = self.get_by_socket(sock)
@@ -64,6 +62,13 @@ class Topology():
         else:
             self._logger.error(f'Agent for socket {sock} was not found, cannot be removed')
 
+    def remove_by_address(self, address: str):
+        agent = self.get_by_address(address)
+        self.remove(agent)
+        
+    def get_all_sockets(self) -> List[socket]:
+        return self.get_all_send_sockets().extend(self.get_all_receive_sockets())
+
     def get_by_socket(self, sock: socket) -> Agent:
         agents = list(filter(lambda x: sock and (x.send_socket is sock or x.receive_socket is sock), self._agents))
         return agents[0] if agents else None
@@ -71,10 +76,6 @@ class Topology():
     def get_by_address(self, address: str) -> Agent:
         agents = list(filter(lambda x: x.address == address and address != '', self._agents))
         return agents[0] if agents else None
-
-    def remove_by_address(self, address: str):
-        agent = self.get_by_address(address)
-        self.remove(agent)
 
     def get_all_nonempty_addresses(self):
         addresses_only = list(map(lambda x: x.address, self._agents))

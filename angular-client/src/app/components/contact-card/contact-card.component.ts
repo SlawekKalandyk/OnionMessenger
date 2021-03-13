@@ -14,13 +14,13 @@ export class ContactCardComponent implements OnInit {
 
   ngOnInit(): void {
     this.socketService.getContactOnline().subscribe(contactDto => {
-      if(this.contact.contact_id == contactDto.contact_id) {
+      if (this.contact.contact_id == contactDto.contact_id) {
         this.contact.online = ContactState.online;
       }
     });
 
     this.socketService.getContactOffline().subscribe(contactDto => {
-      if(this.contact.contact_id == contactDto.contact_id) {
+      if (this.contact.contact_id == contactDto.contact_id) {
         this.contact.online = ContactState.offline;
       }
     });
