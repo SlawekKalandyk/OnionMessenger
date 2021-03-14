@@ -30,19 +30,16 @@ export class ContactsNavComponent implements OnInit {
       this.currentContactService.currentContact = of(this.contacts[0]);
     }
 
-    this.currentContactService.currentContact.subscribe(response => this.currentContact = response)
-    this.socketService.getContacts().subscribe(contactDto => {
-      if (contactDto.approved && !contactDto.awaiting_approval) {
-        let newContact = this.mappingService.mapContactDtoToContact(contactDto);
-        let existingContactIndex = this.contacts.findIndex(contact => contact.contact_id === contactDto.contact_id);
-        
-        if (existingContactIndex > -1) {
-          this.contacts[existingContactIndex] = newContact;
-        } else {
-          newContact.online = ContactState.online;
-          this.contacts.push(newContact);
-        }
-      }
+    this.currentContactService.currentContact.subscribe(response => this.currentContact = response);
+
+    this.socketService.getNewlyApprovedContact().subscribe(contact => {
+      contact.online = ContactState.offline;
+      this.contacts.push(contact);
+    });
+
+    this.socketService.getReceivedContactApproval().subscribe(contact => {
+      contact.online = ContactState.online;
+      this.contacts.push(contact);
     });
   }
 
