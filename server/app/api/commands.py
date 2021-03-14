@@ -11,7 +11,7 @@ from app.messaging.messaging_commands import InitiationCommand, SingleUseCommand
 from app.infrastructure.message import ContentType, MessageAuthor, MessageState, Message
 from app.infrastructure.contact import Contact
 from app.api.receivers import AuthenticationReceiver, MessageCommandReceiver, HelloCommandReceiver, ApproveCommandReceiver
-from app.api.socket_emitter import emit_contact_online, emit_message, emit_new_contact_pending_self_approval, emit_newly_approved_contact
+from app.api.socket_emitter import emit_contact_online, emit_message, emit_new_contact_pending_self_approval, emit_received_contact_approval
 
 
 @dataclass_json
@@ -111,7 +111,7 @@ class ApproveCommand(InitiationCommand):
         
         # if approved, open socket for sending messages since a receiving one is already open
         if self.approved:
-            emit_newly_approved_contact(contact)
+            emit_received_contact_approval(contact)
             auth_command = AuthenticationCommand()
             return [auth_command]
         # TODO: What to do when the other person disapproves? Give option to resend/remove?
