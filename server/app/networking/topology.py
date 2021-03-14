@@ -46,7 +46,6 @@ class Topology():
 
     def remove(self, agent: Agent):
         try:
-            agent.close_sockets()
             self._agents.remove(agent)
         except ValueError:
             self._logger.error(f'Agent {agent} cannot be removed from topology, he already wasn\'t there')
