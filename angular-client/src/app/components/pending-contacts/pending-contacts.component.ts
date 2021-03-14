@@ -31,10 +31,29 @@ export class PendingContactsComponent implements OnInit {
     });
 
     this.socketService.getNewlyNotApprovedContact().subscribe(contact => {
-      let contactIndex = this.waitingForUserApprovalContacts.findIndex(c => c.contact_id == contact.contact_id);
-      if (contactIndex > -1) {
-        this.waitingForUserApprovalContacts.splice(contactIndex, 1);
-      }
+      this.removeContactFromPending(contact);
     });
+
+    this.socketService.getNewlyApprovedContact().subscribe(contact => {
+      this.removeContactFromPending(contact);
+    });
+
+    this.socketService.getReceivedContactApproval().subscribe(contact => {
+      this.removeContactFromPending(contact);
+    });
+  }
+
+  private removeContactFromPending(contact: Contact) {
+    let pendingForUserApprovalIndex = this.waitingForUserApprovalContacts.findIndex(c => c.contact_id == contact.contact_id);
+    if (pendingForUserApprovalIndex > -1) {
+      this.waitingForUserApprovalContacts.splice(pendingForUserApprovalIndex, 1);
+      return;
+    }
+
+    let pendingForInterlocutorApprovalIndex = this.waitingForInterlocutorApprovalContacts.findIndex(c => c.contact_id == contact.contact_id);
+    if (pendingForInterlocutorApprovalIndex > -1) {
+      this.waitingForInterlocutorApprovalContacts.splice(pendingForInterlocutorApprovalIndex, 1);
+      return;
+    }
   }
 }
