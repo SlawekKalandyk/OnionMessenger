@@ -99,6 +99,8 @@ class TorServer(StoppableThread, Closable):
         batch_size = PacketConfiguration.packet_batch_size
         # packet size length + ':' symbol
         first_data = sock.recv(PacketConfiguration.packet_size_info_limit + 1)
+        if not first_data:
+            return first_data
         first_data_str = first_data.decode('utf-8')
         index = search(r':', first_data_str).start()
         size, first_data_without_size = int(first_data_str[:index]), first_data[(index + 1):]
