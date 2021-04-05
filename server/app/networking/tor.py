@@ -91,7 +91,7 @@ class TorServer(StoppableThread, Closable):
         return server_socket
 
 
-    def _receive_all(sock: socket.socket) -> bytes:
+    def _receive_all(self, sock: socket.socket) -> bytes:
         """
         Receive all data sent by socket.
         The structure is <size>:<data> with size being an int.
