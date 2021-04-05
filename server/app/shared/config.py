@@ -102,3 +102,10 @@ class DatabaseConfiguration(BaseConfiguration):
             os.makedirs(DatabaseConfiguration._get_local_app_full_path())
 
         return os.path.join(DatabaseConfiguration._get_local_app_full_path(), DatabaseConfiguration.database_name)
+
+
+class PacketConfiguration:
+    packet_batch_size = 2048
+    packet_size_limit = 1024**2 * 8
+    packet_size_info_limit = 10
+    size_separator = ':'
