@@ -1,3 +1,5 @@
+from app.messaging.messaging_commands import ImAliveCommand
+from app.messaging.messaging_receivers import ImAliveCommandReceiver
 from app.messaging.authenticator import Authenticator
 from app.shared.logging import initialize_logging
 from app.networking.topology import Topology
@@ -20,6 +22,7 @@ def register_command_mappings(command_mapper: CommandMapper):
     command_mapper.register(HelloCommand)
     command_mapper.register(ApproveCommand)
     command_mapper.register(AuthenticationCommand)
+    command_mapper.register(ImAliveCommand)
     
 
 def register_commands(command_handler: CommandHandler, topology: Topology):
@@ -31,7 +34,8 @@ def register_commands(command_handler: CommandHandler, topology: Topology):
     command_handler.register(ApproveCommand, approve_receiver)
     authentication_receiver = AuthenticationReceiver(ContactRepository(), topology)
     command_handler.register(AuthenticationCommand, authentication_receiver)
-
+    im_alive_receiver = ImAliveCommandReceiver(topology)
+    command_handler.register(ImAliveCommand, im_alive_receiver)
 
 def main():
     initialize_logging()

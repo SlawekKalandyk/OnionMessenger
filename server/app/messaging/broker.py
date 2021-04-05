@@ -1,9 +1,10 @@
 from abc import ABC, abstractmethod
-from app.messaging.messaging_commands import SingleUseCommand
+from app.shared.config import TorConfiguration
+from app.messaging.messaging_commands import ImAliveCommand, SingleUseCommand
 import logging
 from app.networking.topology import Topology
 from queue import Queue
-from time import sleep
+from time import sleep, time
 from typing import Iterable
 from dataclasses import dataclass
 
@@ -36,12 +37,15 @@ class Broker(StoppableThread, PacketHandler):
         self._topology = topology
         self._tor_connection_factory = TorConnectionFactory(topology)
         self._connection_failure_callback = connection_failure_callback
+        self._last_imalive_time = 0
+        self._imalive_interval = 30
         self._logger = logging.getLogger(__name__)
 
     def run(self):
         while True:
             self._handle_incoming()
             self._handle_outgoing()
+            self._handle_imalive()
             sleep(0.01)
 
     def handle(self, packet: Packet):
@@ -80,3 +84,19 @@ class Broker(StoppableThread, PacketHandler):
             for response in responses:
                 response_payload = Payload(response, address)
                 self.send(response_payload)
+
+    def _handle_imalive(self):
+        current_time = time()
+        time_since_last_imalive_sent = current_time - self._last_imalive_time
+        if time_since_last_imalive_sent >= self._imalive_interval:
+            self._broadcast_imalive()
+            self._last_imalive_time = time()
+        # close inactive agents
+    
+    def _broadcast_imalive(self):
+        for agent in self._topology._agents:
+            imalive = ImAliveCommand()
+            connection_settings = ConnectionSettings(agent.address, TorConfiguration.get_tor_server_port())
+            payload = Payload(imalive, connection_settings)
+            self.send(payload)
+            agent.time_since_last_contact = 0

@@ -62,7 +62,7 @@ class TorServer(StoppableThread, Closable):
                     agent = self._topology.get_by_socket(sock)
                     if data:
                         # if sock in topology has empty address:
-                        #   handle first contact - command HAS to contain source address
+                        # handle first contact - command HAS to contain source address
                         if agent.address == "":
                             packet = Packet(data)
                             self._authentication.authenticate(agent, packet)
@@ -70,10 +70,10 @@ class TorServer(StoppableThread, Closable):
                             packet = Packet(data, ConnectionSettings(agent.address, TorConfiguration.get_tor_server_port()))
                             self._packet_handler.handle(packet)
                     else:
-                        # if received data length is 0, it means the socket has been closed on the other side
-                        self._logger.info(f'Disconnected from {agent.address}')
-                        self._topology.remove(agent)
-                        agent.close_sockets()
+                        # if received data length is 0 and adress is empty, remove agent and close sockets
+                        if agent and agent.address == "":
+                            self._topology.remove(agent)
+                            agent.close_sockets()
             for sock in err:
                 self._logger.error(f'Error in {sock}')
                 self._topology.get_by_socket(sock).close_sockets()
@@ -121,8 +121,9 @@ class PacketSizeOverLimitError(Exception):
 
 
 class TorConnection():
-    def __init__(self, sock: socket.socket):
+    def __init__(self, sock: socket.socket, topology: Topology):
         self._socket = sock
+        self._topology = topology
         self._logger = logging.getLogger(__name__)
 
     def send(self, packet: Packet):
@@ -132,7 +133,13 @@ class TorConnection():
         size = len(packet.data)
         data = (str(size) + ':').encode('utf-8')
         data = data + packet.data
-        self._socket.send(data)
+        try:
+            self._socket.send(data)
+        except ConnectionAbortedError:
+            agent = self._topology.get_by_address(packet.address.address)
+            if agent:
+                self._topology.remove(agent)
+                agent.close_sockets()
 
 
 class TorConnectionFactory():
@@ -144,7 +151,7 @@ class TorConnectionFactory():
         # check if agent exists, then if send_socket exists return connection
         agent = self._topology.get_by_address(address)
         if agent and agent.send_socket:
-            return ActionResult(TorConnection(agent.send_socket), True)
+            return ActionResult(TorConnection(agent.send_socket, self._topology), True)
 
         # if we're here then socket doesn't exist
         sock = self._create_socket()
@@ -160,7 +167,7 @@ class TorConnectionFactory():
             else:
                 agent = Agent(address=address, send_socket=sock, time_since_last_contact=0.0)
                 self._topology.append(agent)
-            return ActionResult(TorConnection(agent.send_socket), True)
+            return ActionResult(TorConnection(agent.send_socket, self._topology), True)
 
     def _create_socket(self) -> socket.socket:
         socket.socket = socks.socksocket

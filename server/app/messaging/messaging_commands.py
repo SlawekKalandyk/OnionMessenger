@@ -1,3 +1,4 @@
+from app.messaging.messaging_receivers import ImAliveCommandReceiver
 from app.shared.utility import generate_random_guid
 from app.shared.signature import Signature
 from app.networking.topology import Agent
@@ -29,3 +30,19 @@ class InitiationCommand(Command):
 @dataclass(frozen=True)
 class SingleUseCommand(Command):
     pass
+
+
+@dataclass_json
+@dataclass(frozen=True)
+class ImAliveCommand(Command):
+    """
+    Command responsible for keeping the connection alive. When received mark responsible agent's time since last contact as 0.
+    """
+    @classmethod
+    def get_identifier(cls) -> str:
+        return 'IMALIVE'
+
+    def invoke(self, receiver: ImAliveCommandReceiver):
+        agent: Agent = receiver.topology.get_by_address(self.context.sender.address)
+        if agent:
+            agent.time_since_last_contact = 0

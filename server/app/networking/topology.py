@@ -36,7 +36,7 @@ class AgentRemoveCallback(ABC):
 
 class Topology():
     def __init__(self, agent_removal_callback: AgentRemoveCallback = None) -> None:
-        self._agents = []
+        self._agents: list[Agent] = []
         self._logger = logging.getLogger(__name__)
         self._removal_callback = agent_removal_callback
 
