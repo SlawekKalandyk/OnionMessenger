@@ -1,3 +1,4 @@
+from re import search
 from app.shared.utility import stem_compatible_base64_blob_from_private_key
 from app.shared.signature import Signature
 from app.shared.action_result import ActionResult
@@ -15,7 +16,7 @@ import select
 
 from app.networking.base import ConnectionSettings, HiddenServiceStartObserver, Packet, PacketHandler
 from app.shared.helpful_abstractions import Closable
-from app.shared.config import TorConfiguration
+from app.shared.config import PacketConfiguration, TorConfiguration
 from app.shared.multithreading import StoppableThread
 
 
@@ -90,13 +91,46 @@ class TorServer(StoppableThread, Closable):
         return server_socket
 
 
+    def _receive_all(sock: socket.socket) -> bytes:
+        """
+        Receive all data sent by socket.
+        The structure is <size>:<data> with size being an int.
+        """
+        batch_size = PacketConfiguration.packet_batch_size
+        # packet size length + ':' symbol
+        first_data = sock.recv(PacketConfiguration.packet_size_info_limit + 1)
+        first_data_str = first_data.decode('utf-8')
+        index = search(r':', first_data_str).start()
+        size, first_data_without_size = int(first_data_str[:index]), first_data[(index + 1):]
+        first_data_without_size = first_data[(index + 1):] if index < PacketConfiguration.packet_size_info_limit else []
+
+        if size > PacketConfiguration.packet_size_limit:
+            raise PacketSizeOverLimitError(size)
+
+        total_data = first_data_without_size
+        while len(total_data) < size:
+            total_data += sock.recv(batch_size)
+
+        return total_data
+
+
+class PacketSizeOverLimitError(Exception):
+    pass
+
+
 class TorConnection():
     def __init__(self, sock: socket.socket):
         self._socket = sock
         self._logger = logging.getLogger(__name__)
 
     def send(self, packet: Packet):
-        self._socket.send(packet.data)
+        """
+        Send packet to selected socket. Before sending, '<size>:' is prepended to packet's data.
+        """
+        size = len(packet.data)
+        data = (str(size) + ':').encode('utf-8')
+        data = data + packet.data
+        self._socket.send(data)
 
 
 class TorConnectionFactory():

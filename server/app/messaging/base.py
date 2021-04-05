@@ -1,4 +1,3 @@
-
 from app.networking.topology import Agent, Topology
 from app.networking.base import ConnectionSettings
 from dataclasses import dataclass, InitVar, field
@@ -61,6 +60,7 @@ class CommandMapper:
         return command_type.from_json(code)
 
     def _parse(self, text: str) -> Tuple[str, str]:
+        # find first non-alphanumeric character (should be '{')
         index = search(r'[^A-Z]', text).start()
         return text[:index], text[index:]
 
