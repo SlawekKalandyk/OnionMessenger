@@ -58,7 +58,7 @@ class TorServer(StoppableThread, Closable):
                             agent.close_sockets()
                         continue
                             
-                    data = sock.recv(2048)
+                    data = self._receive_all(sock)
                     agent = self._topology.get_by_socket(sock)
                     if data:
                         # if sock in topology has empty address:
