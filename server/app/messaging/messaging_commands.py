@@ -8,7 +8,6 @@ from app.messaging.base import Command
 from dataclasses import InitVar, dataclass, field
 from dataclasses_json import dataclass_json
 
-
 @dataclass(frozen=False)
 class InitiationCommandContext:
     agent: Agent = None
@@ -36,13 +35,11 @@ class SingleUseCommand(Command):
 @dataclass(frozen=True)
 class ImAliveCommand(Command):
     """
-    Command responsible for keeping the connection alive. When received mark responsible agent's time since last contact as 0.
+    Command responsible for keeping the connection alive.
     """
     @classmethod
     def get_identifier(cls) -> str:
         return 'IMALIVE'
 
     def invoke(self, receiver: ImAliveCommandReceiver):
-        agent: Agent = receiver.topology.get_by_address(self.context.sender.address)
-        if agent:
-            agent.time_since_last_contact = 0
+        pass

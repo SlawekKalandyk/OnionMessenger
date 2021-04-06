@@ -37,8 +37,7 @@ class Broker(StoppableThread, PacketHandler):
         self._topology = topology
         self._tor_connection_factory = TorConnectionFactory(topology)
         self._connection_failure_callback = connection_failure_callback
-        self._last_imalive_time = 0
-        self._imalive_interval = 30
+        self._imalive_interval = 45
         self._logger = logging.getLogger(__name__)
 
     def run(self):
@@ -46,7 +45,7 @@ class Broker(StoppableThread, PacketHandler):
             self._handle_incoming()
             self._handle_outgoing()
             self._handle_imalive()
-            sleep(0.01)
+            sleep(0.1)
 
     def handle(self, packet: Packet):
         payload = Payload(self._command_mapper.map_from_bytes(packet.data), packet.address)
@@ -87,16 +86,12 @@ class Broker(StoppableThread, PacketHandler):
 
     def _handle_imalive(self):
         current_time = time()
-        time_since_last_imalive_sent = current_time - self._last_imalive_time
-        if time_since_last_imalive_sent >= self._imalive_interval:
-            self._broadcast_imalive()
-            self._last_imalive_time = time()
-        # close inactive agents
-    
-    def _broadcast_imalive(self):
-        for agent in self._topology._agents:
-            imalive = ImAliveCommand()
-            connection_settings = ConnectionSettings(agent.address, TorConfiguration.get_tor_server_port())
-            payload = Payload(imalive, connection_settings)
-            self.send(payload)
-            agent.time_since_last_contact = 0
+        for agent in self._topology.get_all_active_agents():
+            if current_time - agent.last_contact_time > self._imalive_interval:
+                imalive = ImAliveCommand()
+                connection_settings = ConnectionSettings(agent.address, TorConfiguration.get_tor_server_port())
+                payload = Payload(imalive, connection_settings)
+                self.send(payload)
+        # TODO: close inactive agents
+        # May not be needed, if ImAlive (or any command really) gets a ConnectionAbortedError
+        # the connection is shut down

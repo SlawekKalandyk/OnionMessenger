@@ -11,7 +11,7 @@ from stem.process import subprocess
 from stem.control import Controller
 import socket
 import socks
-from time import sleep
+from time import sleep, time
 import select
 
 from app.networking.base import ConnectionSettings, HiddenServiceStartObserver, Packet, PacketHandler
@@ -48,7 +48,7 @@ class TorServer(StoppableThread, Closable):
                     client_socket, _ = self._socket.accept()
                     client_socket.setblocking(0)
                     # even if an agent for this socket already exists, put it in topology for now
-                    self._topology.append(Agent(receive_socket=client_socket, time_since_last_contact=0))
+                    self._topology.append(Agent(receive_socket=client_socket, last_contact_time=time()))
                 else:
                     # if file descriptor is -1, it means the socket has been closed
                     if sock.fileno() == -1:
@@ -130,13 +130,15 @@ class TorConnection():
         """
         Send packet to selected socket. Before sending, '<size>:' is prepended to packet's data.
         """
+        agent = self._topology.get_by_address(packet.address.address)
         size = len(packet.data)
         data = (str(size) + ':').encode('utf-8')
         data = data + packet.data
         try:
             self._socket.send(data)
+            if agent:
+                agent.last_contact_time = time()
         except ConnectionAbortedError:
-            agent = self._topology.get_by_address(packet.address.address)
             if agent:
                 self._topology.remove(agent)
                 agent.close_sockets()
@@ -165,7 +167,7 @@ class TorConnectionFactory():
             if agent:
                 agent.send_socket = sock
             else:
-                agent = Agent(address=address, send_socket=sock, time_since_last_contact=0.0)
+                agent = Agent(address=address, send_socket=sock, last_contact_time=time())
                 self._topology.append(agent)
             return ActionResult(TorConnection(agent.send_socket, self._topology), True)
 

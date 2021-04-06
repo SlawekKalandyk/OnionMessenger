@@ -11,7 +11,7 @@ class Agent():
     address: str = ""
     send_socket: socket = None
     receive_socket: socket = None
-    time_since_last_contact: float = -1
+    last_contact_time: float = -1
 
     def merge(self, agent: Agent):
         if not self.address:
@@ -88,4 +88,10 @@ class Topology():
     def get_all_receive_sockets(self):
         all_receive_sockets =  list(map(lambda x: x.receive_socket, self._agents))
         return list(filter(lambda x: x, all_receive_sockets))
-        
+
+    def get_all_active_agents(self) -> list[Agent]:
+        """
+        Returns all agents with non-empty address and both send and receive socket not equal to None
+        """
+        active_agents = list(filter(lambda x: x.address != "" and x.send_socket and x.receive_socket, self._agents))
+        return active_agents
