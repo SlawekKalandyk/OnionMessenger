@@ -37,7 +37,7 @@ class Broker(StoppableThread, PacketHandler):
         self._topology = topology
         self._tor_connection_factory = TorConnectionFactory(topology)
         self._connection_failure_callback = connection_failure_callback
-        self._imalive_interval = 45
+        self._imalive_interval = 30
         self._logger = logging.getLogger(__name__)
 
     def run(self):
