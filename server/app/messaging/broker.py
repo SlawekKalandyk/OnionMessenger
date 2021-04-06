@@ -1,9 +1,10 @@
 from abc import ABC, abstractmethod
-from app.messaging.messaging_commands import SingleUseCommand
+from app.shared.config import TorConfiguration
+from app.messaging.messaging_commands import ImAliveCommand, SingleUseCommand
 import logging
 from app.networking.topology import Topology
 from queue import Queue
-from time import sleep
+from time import sleep, time
 from typing import Iterable
 from dataclasses import dataclass
 
@@ -36,13 +37,15 @@ class Broker(StoppableThread, PacketHandler):
         self._topology = topology
         self._tor_connection_factory = TorConnectionFactory(topology)
         self._connection_failure_callback = connection_failure_callback
+        self._imalive_interval = 30
         self._logger = logging.getLogger(__name__)
 
     def run(self):
         while True:
             self._handle_incoming()
             self._handle_outgoing()
-            sleep(0.01)
+            self._handle_imalive()
+            sleep(0.1)
 
     def handle(self, packet: Packet):
         payload = Payload(self._command_mapper.map_from_bytes(packet.data), packet.address)
@@ -80,3 +83,15 @@ class Broker(StoppableThread, PacketHandler):
             for response in responses:
                 response_payload = Payload(response, address)
                 self.send(response_payload)
+
+    def _handle_imalive(self):
+        current_time = time()
+        for agent in self._topology.get_all_active_agents():
+            if current_time - agent.last_contact_time > self._imalive_interval:
+                imalive = ImAliveCommand()
+                connection_settings = ConnectionSettings(agent.address, TorConfiguration.get_tor_server_port())
+                payload = Payload(imalive, connection_settings)
+                self.send(payload)
+        # TODO: close inactive agents
+        # May not be needed, if ImAlive (or any command really) gets a ConnectionAbortedError
+        # the connection is shut down
