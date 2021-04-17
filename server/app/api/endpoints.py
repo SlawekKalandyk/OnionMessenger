@@ -1,3 +1,4 @@
+from app.infrastructure.saved_command import SavedCommand
 from app.networking.topology import Agent, Topology
 from flask import Flask, g, request, jsonify
 from flask_cors import CORS
@@ -37,7 +38,7 @@ def get_and_connect_to_database() -> DatabaseContext:
 def initdb():
     database = DatabaseContext()
     database.connect_to_database()
-    database.create_tables_if_not_exist([Contact, Message])
+    database.create_tables_if_not_exist([Contact, Message, SavedCommand])
     database.close()
 
 
