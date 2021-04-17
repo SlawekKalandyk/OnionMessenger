@@ -1,3 +1,4 @@
+from app.shared.event import Event
 from re import search
 from app.shared.utility import stem_compatible_base64_blob_from_private_key
 from app.shared.signature import Signature
@@ -124,6 +125,9 @@ class TorConnection():
     def __init__(self, sock: socket.socket, topology: Topology):
         self._socket = sock
         self._topology = topology
+        self.failed_to_send_event = Event()
+        self.before_sending_event = Event()
+        self.after_sending_event = Event()
         self._logger = logging.getLogger(__name__)
 
     def send(self, packet: Packet):
@@ -136,7 +140,9 @@ class TorConnection():
         data = data + packet.data
 
         try:
+            self.before_sending_event.notify()
             self._socket.send(data)
+            self.after_sending_event.notify()
             if agent:
                 agent.last_contact_time = time()
         except ConnectionAbortedError:
@@ -145,6 +151,8 @@ class TorConnection():
             if agent:
                 self._topology.remove(agent)
                 agent.close_sockets()
+            self._logger.error(f'Send failed to {agent.address}')
+            self.failed_to_send_event.notify()
 
 
 class TorConnectionFactory():

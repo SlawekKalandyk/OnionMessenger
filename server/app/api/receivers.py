@@ -28,3 +28,9 @@ class ApproveCommandReceiver(Receiver):
 class AuthenticationReceiver(Receiver):
     contact_repository: ContactRepository
     topology: Topology
+
+
+@dataclass
+class ConnectionEstablishedReceiver(Receiver):
+    contact_repository: ContactRepository
+    topology: Topology

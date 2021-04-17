@@ -1,3 +1,4 @@
+from app.api.event_handlers import BacklogHandler
 from app.messaging.messaging_commands import ImAliveCommand
 from app.messaging.messaging_receivers import ImAliveCommandReceiver
 from app.messaging.authenticator import Authenticator
@@ -6,10 +7,10 @@ from app.networking.topology import Topology
 from app.api.observers import OfflineEmitterAgentRemoveCallback, OfflineEmitterConnectionFailureCallback, TorHiddenServiceStartObserver
 from app.infrastructure.message import MessageRepository
 from app.infrastructure.contact import ContactRepository
-from app.api.receivers import ApproveCommandReceiver, AuthenticationReceiver, HelloCommandReceiver, MessageCommandReceiver
+from app.api.receivers import ApproveCommandReceiver, AuthenticationReceiver, ConnectionEstablishedReceiver, HelloCommandReceiver, MessageCommandReceiver
 from app.networking.tor import TorServer, TorService
 from app.networking.base import ConnectionSettings
-from app.api.commands import ApproveCommand, AuthenticationCommand, HelloCommand, MessageCommand
+from app.api.commands import ApproveCommand, AuthenticationCommand, ConnectionEstablishedCommand, HelloCommand, MessageCommand
 from app.messaging.base import CommandMapper
 from app.messaging.command_handler import CommandHandler
 from app.messaging.broker import Broker
@@ -23,6 +24,7 @@ def register_command_mappings(command_mapper: CommandMapper):
     command_mapper.register(ApproveCommand)
     command_mapper.register(AuthenticationCommand)
     command_mapper.register(ImAliveCommand)
+    command_mapper.register(ConnectionEstablishedCommand)
     
 
 def register_commands(command_handler: CommandHandler, topology: Topology):
@@ -36,6 +38,8 @@ def register_commands(command_handler: CommandHandler, topology: Topology):
     command_handler.register(AuthenticationCommand, authentication_receiver)
     im_alive_receiver = ImAliveCommandReceiver(topology)
     command_handler.register(ImAliveCommand, im_alive_receiver)
+    connection_established_receiver = ConnectionEstablishedReceiver(ContactRepository(), topology)
+    command_handler.register(ConnectionEstablishedCommand, connection_established_receiver)
 
 def main():
     initialize_logging()
@@ -59,6 +63,7 @@ def main():
 
     register_command_mappings(command_mapper)
     register_commands(command_handler, topology)
+    broker.loop_event += BacklogHandler().handle_backlog
 
     InstanceContainer.register_singleton(CommandMapper, command_mapper)
 

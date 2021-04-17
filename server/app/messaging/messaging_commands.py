@@ -34,7 +34,7 @@ class SingleUseCommand(Command):
 @dataclass_json
 @dataclass(frozen=True)
 class SaveableCommand(Command):
-    def save(self):
+    def save(self, address):
         pass
 
 

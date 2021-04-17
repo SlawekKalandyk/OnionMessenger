@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
+from app.shared.event import Event
 from app.shared.config import TorConfiguration
-from app.messaging.messaging_commands import ImAliveCommand, SingleUseCommand
+from app.messaging.messaging_commands import ImAliveCommand, SaveableCommand, SingleUseCommand
 import logging
 from app.networking.topology import Topology
 from queue import Queue
@@ -38,6 +39,7 @@ class Broker(StoppableThread, PacketHandler):
         self._tor_connection_factory = TorConnectionFactory(topology)
         self._connection_failure_callback = connection_failure_callback
         self._imalive_interval = 30
+        self.loop_event = Event()
         self._logger = logging.getLogger(__name__)
 
     def run(self):
@@ -45,6 +47,7 @@ class Broker(StoppableThread, PacketHandler):
             self._handle_incoming()
             self._handle_outgoing()
             self._handle_imalive()
+            self.loop_event.notify(self)
             sleep(0.1)
 
     def handle(self, packet: Packet):
@@ -58,18 +61,18 @@ class Broker(StoppableThread, PacketHandler):
     def send(self, payload: Payload):
         self._send_queue.put(payload)
         self._logger.info(f'Queued: {payload.command.__class__.__name__} sent to {payload.address}')
-            
+
     def _handle_outgoing(self):
         while not self._send_queue.empty():
             payload: Payload = self._send_queue.get()
             packet = Packet(self._command_mapper.map_to_bytes(payload.command), payload.address)
             connection_action_result = self._tor_connection_factory.get_outgoing_connection(payload.address.address)
             if connection_action_result.valid:
+                if isinstance(payload.command, SaveableCommand):
+                    connection_action_result.value.failed_to_send_event += payload.command.save(payload.address.address)
+                connection_action_result.value.before_sending_event += payload.command.before_sending()
+                connection_action_result.value.after_sending_event += payload.command.after_sending(address=payload.address.address)
                 connection_action_result.value.send(packet)
-                if isinstance(payload.command, SingleUseCommand):
-                    agent = self._topology.get_by_address(payload.address.address)
-                    self._topology.remove(agent)
-                    agent.close_sockets()
             else:
                 if self._connection_failure_callback:
                     self._connection_failure_callback.on_connection_failure(payload.address.address)

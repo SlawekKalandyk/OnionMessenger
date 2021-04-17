@@ -33,6 +33,12 @@ class Command(ABC):
     def invoke(self, receiver: Receiver):
         pass
 
+    def before_sending(self, *args, **kwargs):
+        pass
+
+    def after_sending(self, *args, **kwargs):
+        pass
+
     def _close_sockets(self, topology: Topology, agent: Agent):
         topology.remove(agent)
         agent.close_sockets()
