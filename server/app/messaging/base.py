@@ -48,14 +48,25 @@ class CommandMapper:
         return self
 
     def map_to_bytes(self, command: Command) -> bytes:
-        self._assert_registered(command.get_identifier())
-        code = command.to_json()
-        return (command.get_identifier() + code).encode('utf-8')
+        return self.map_to_json(command).encode('utf-8')
 
     def map_from_bytes(self, data: bytes) -> Command:
-        identifier, code = self._parse(data.decode('utf-8'))
-        self._assert_registered(identifier)
+        return self.map_from_json(data.decode('utf-8'))
 
+    def map_to_json(self, command: Command) -> str:
+        """
+        Output in form IDENTIFIER{...}
+        """
+        self._assert_registered(command.get_identifier())
+        code = command.to_json()
+        return command.get_identifier() + code
+
+    def map_from_json(self, data: str) -> Command:
+        """
+        Input in form IDENTIFIER{...}
+        """
+        identifier, code = self._parse(data)
+        self._assert_registered(identifier)
         command_type = self._registered_commands[identifier]
         return command_type.from_json(code)
 

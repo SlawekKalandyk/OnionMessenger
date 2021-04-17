@@ -1,3 +1,4 @@
+from app.infrastructure.saved_command import SavedCommand, SavedCommandRepository
 from app.shared.utility import get_onion_address_from_public_key
 from app.shared.config import TorConfiguration
 from app.shared.signature import Signature
@@ -7,16 +8,16 @@ from typing import List
 import datetime
 
 from app.messaging.base import Command
-from app.messaging.messaging_commands import InitiationCommand, SingleUseCommand
+from app.messaging.messaging_commands import InitiationCommand, SaveableCommand, SingleUseCommand
 from app.infrastructure.message import ContentType, MessageAuthor, MessageState, Message
-from app.infrastructure.contact import Contact
+from app.infrastructure.contact import Contact, ContactRepository
 from app.api.receivers import AuthenticationReceiver, MessageCommandReceiver, HelloCommandReceiver, ApproveCommandReceiver
 from app.api.socket_emitter import emit_contact_online, emit_message, emit_new_contact_pending_self_approval, emit_received_contact_approval
 
 
 @dataclass_json
 @dataclass(frozen=True)
-class MessageCommand(Command):
+class MessageCommand(SaveableCommand):
     content: str
     content_type: ContentType
 
@@ -33,10 +34,15 @@ class MessageCommand(Command):
             emit_message(message)
         return []
 
+    def save(self):
+        saved_command_repository = SavedCommandRepository()
+        contact: Contact = ContactRepository().get_by_address(self.context.sender.address)
+        saved_command_repository.add(SavedCommand(interlocutor=contact, command=self, identifier=self.get_identifier()))
+
 
 @dataclass_json
 @dataclass(frozen=True)
-class HelloCommand(InitiationCommand, SingleUseCommand):
+class HelloCommand(InitiationCommand, SingleUseCommand, SaveableCommand):
     public_key: str = TorConfiguration.get_hidden_service_public_key()
 
     @classmethod
@@ -57,6 +63,11 @@ class HelloCommand(InitiationCommand, SingleUseCommand):
         self._close_sockets(receiver.topology, self.initiation_context.agent)
         return []
 
+    def save(self):
+        saved_command_repository = SavedCommandRepository()
+        contact: Contact = ContactRepository().get_by_address(self.context.sender.address)
+        saved_command_repository.add(SavedCommand(interlocutor=contact, command=self, identifier=self.get_identifier()))
+
 
 @dataclass_json
 @dataclass(frozen=True)
@@ -68,7 +79,7 @@ class AuthenticationCommand(InitiationCommand):
     def invoke(self, receiver: AuthenticationReceiver) -> List[Command]:
         contact = receiver.contact_repository.get_by_address(self.context.sender.address)
         # if authentication was sent from someone who is not in your contacts, ignore it and close sockets
-        if not contact or not Signature.verify(contact.public_key, self.signed_uuid):
+        if not contact or not Signature.verify(contact.public_key, self.signed_uuid) or not contact.approved:
             self._close_sockets(receiver.topology, self.initiation_context.agent)
             return []
 
@@ -83,7 +94,7 @@ class AuthenticationCommand(InitiationCommand):
 
 @dataclass_json
 @dataclass(frozen=True)
-class ApproveCommand(InitiationCommand):
+class ApproveCommand(InitiationCommand, SaveableCommand):
     approved: bool = False
     public_key: str = TorConfiguration.get_hidden_service_public_key()
 
@@ -117,3 +128,8 @@ class ApproveCommand(InitiationCommand):
         # TODO: What to do when the other person disapproves? Give option to resend/remove?
         
         return []
+
+    def save(self):
+        saved_command_repository = SavedCommandRepository()
+        contact: Contact = ContactRepository().get_by_address(self.context.sender.address)
+        saved_command_repository.add(SavedCommand(interlocutor=contact, command=self, identifier=self.get_identifier()))

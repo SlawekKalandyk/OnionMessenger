@@ -33,6 +33,13 @@ class SingleUseCommand(Command):
 
 @dataclass_json
 @dataclass(frozen=True)
+class SaveableCommand(Command):
+    def save(self):
+        pass
+
+
+@dataclass_json
+@dataclass(frozen=True)
 class ImAliveCommand(Command):
     """
     Command responsible for keeping the connection alive.

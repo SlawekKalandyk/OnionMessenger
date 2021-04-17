@@ -59,6 +59,9 @@ def main():
 
     register_command_mappings(command_mapper)
     register_commands(command_handler, topology)
+
+    InstanceContainer.register_singleton(CommandMapper, command_mapper)
+
     broker.start()
     tor_server.start()
     tor_service.start()

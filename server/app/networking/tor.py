@@ -134,11 +134,14 @@ class TorConnection():
         size = len(packet.data)
         data = (str(size) + ':').encode('utf-8')
         data = data + packet.data
+
         try:
             self._socket.send(data)
             if agent:
                 agent.last_contact_time = time()
         except ConnectionAbortedError:
+            # it's called when the next ImAlive is sent
+            # 1 -> 30s -> 2 -> close
             if agent:
                 self._topology.remove(agent)
                 agent.close_sockets()
