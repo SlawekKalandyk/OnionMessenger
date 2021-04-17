@@ -42,7 +42,7 @@ class MessageCommand(SaveableCommand):
         if saved_command_repository.get_by_command(self):
             return
         contact: Contact = ContactRepository().get_by_address(address)
-        saved_command_repository.add(SavedCommand(interlocutor=contact, command=self, identifier=self.get_identifier()))
+        saved_command_repository.add(SavedCommand(interlocutor=contact, command=self, identifier=self.get_identifier(), initiate=False))
 
     def after_sending(self):
         saved_command_repository = SavedCommandRepository()
@@ -91,7 +91,7 @@ class HelloCommand(InitiationCommand, SingleUseCommand, SaveableCommand):
         contact: Contact = ContactRepository().get_by_address(address)
         if saved_command_repository.get_by_identifier_and_contact(self.get_identifier(), contact):
             return
-        saved_command_repository.add(SavedCommand(interlocutor=contact, command=self, identifier=self.get_identifier()))
+        saved_command_repository.add(SavedCommand(interlocutor=contact, command=self, identifier=self.get_identifier(), initiate=True))
 
     def after_sending(self, address: str):
         topology: Topology = InstanceContainer.resolve(Topology)
@@ -171,7 +171,7 @@ class ApproveCommand(InitiationCommand, SaveableCommand):
             contact: Contact = ContactRepository().get_by_address(address)
             if saved_command_repository.get_by_identifier_and_contact(self.get_identifier(), contact):
                 return
-            saved_command_repository.add(SavedCommand(interlocutor=contact, command=self, identifier=self.get_identifier()))
+            saved_command_repository.add(SavedCommand(interlocutor=contact, command=self, identifier=self.get_identifier(), initiate=True))
 
 
 @dataclass_json
