@@ -45,10 +45,11 @@ class MessageCommand(SaveableCommand):
         contact: Contact = ContactRepository().get_by_address(address)
         saved_command_repository.add(SavedCommand(interlocutor=contact, command=self, identifier=self.get_identifier(), initiate=False))
 
-    def after_sending(self):
+    def after_sending(self, address: str):
         saved_command_repository = SavedCommandRepository()
         saved_command = saved_command_repository.get_by_command(self)
-        saved_command_repository.remove(saved_command)
+        if saved_command:
+            saved_command_repository.remove(saved_command)
 
 
 @dataclass_json
