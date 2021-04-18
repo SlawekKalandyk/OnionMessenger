@@ -99,6 +99,10 @@ class HelloCommand(InitiationCommand, SingleUseCommand, SaveableCommand):
         topology: Topology = InstanceContainer.resolve(Topology)
         agent = topology.get_by_address(address)
         self._close_sockets(topology, agent)
+        saved_command_repository = SavedCommandRepository()
+        saved_command = saved_command_repository.get_by_command_and_address(self, address)
+        if saved_command:
+            saved_command_repository.remove(saved_command)
 
 
 @dataclass_json
@@ -175,6 +179,16 @@ class ApproveCommand(InitiationCommand, SaveableCommand):
             if saved_command_repository.get_by_identifier_and_contact(self.get_identifier(), contact):
                 return
             saved_command_repository.add(SavedCommand(interlocutor=contact, command=self, identifier=self.get_identifier(), initiate=True))
+
+    def after_sending(self, address: str):
+        if not self.approved:
+            topology: Topology = InstanceContainer.resolve(Topology)
+            agent = topology.get_by_address(address)
+            self._close_sockets(topology, agent)
+        saved_command_repository = SavedCommandRepository()
+        saved_command = saved_command_repository.get_by_command_and_address(self, address)
+        if saved_command:
+            saved_command_repository.remove(saved_command)
 
 
 @dataclass_json

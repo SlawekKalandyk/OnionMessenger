@@ -34,6 +34,9 @@ class SavedCommandRepository(metaclass=Singleton):
     def get_all_initiating(self):
         return list(SavedCommand.select().where(SavedCommand.initiate == True))
 
+    def get_by_command_and_address(self, command: Command, address: str):
+        return SavedCommand.get_or_none(SavedCommand.command == command and SavedCommand.interlocutor.address == address)
+
     def get_by_command(self, command: Command):
         return SavedCommand.get_or_none(SavedCommand.command == command)
 
