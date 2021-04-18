@@ -7,7 +7,7 @@ from app.infrastructure.saved_command import SavedCommandRepository
 class BacklogHandler:
     def __init__(self):
         self._backlog_send_interval = 90
-        self._last_backlog_check_time = time()
+        self._last_backlog_check_time = time() - self._backlog_send_interval
 
     def handle_backlog(self, broker: Broker):
         current = time()

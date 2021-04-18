@@ -1,5 +1,6 @@
 from __future__ import annotations
 from abc import ABC, abstractmethod
+from app.shared.event import Event
 from dataclasses import dataclass
 import logging
 from socket import socket
@@ -28,17 +29,11 @@ class Agent():
             self.receive_socket.close()
 
 
-class AgentRemoveCallback(ABC):
-    @abstractmethod
-    def on_agent_removed(self, agent: Agent):
-        pass
-
-
 class Topology():
-    def __init__(self, agent_removal_callback: AgentRemoveCallback = None) -> None:
+    def __init__(self) -> None:
         self._agents: list[Agent] = []
         self._logger = logging.getLogger(__name__)
-        self._removal_callback = agent_removal_callback
+        self.agent_removed_event = Event()
 
     def append(self, agent: Agent):
         self._agents.append(agent)
@@ -50,8 +45,7 @@ class Topology():
         except ValueError:
             self._logger.error(f'Agent {agent} cannot be removed from topology, he already wasn\'t there')
         else:
-            if self._removal_callback:
-                self._removal_callback.on_agent_removed(agent)
+            self.agent_removed_event.notify(agent)
             self._logger.info(f'Agent {agent.address} removed from topology')
 
     def remove_by_socket(self, sock: socket):

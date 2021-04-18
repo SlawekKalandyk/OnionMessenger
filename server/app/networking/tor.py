@@ -142,7 +142,7 @@ class TorConnection():
         try:
             self.before_sending_event.notify()
             self._socket.send(data)
-            self.after_sending_event.notify()
+            self.after_sending_event.notify(address=packet.address.address)
             if agent:
                 agent.last_contact_time = time()
         except ConnectionAbortedError:
@@ -152,12 +152,13 @@ class TorConnection():
                 self._topology.remove(agent)
                 agent.close_sockets()
             self._logger.error(f'Send failed to {agent.address}')
-            self.failed_to_send_event.notify()
+            self.failed_to_send_event.notify(address=agent.address)
 
 
 class TorConnectionFactory():
     def __init__(self, topology: Topology):
         self._topology = topology
+        self.connection_failure_event = Event()
         self._logger = logging.getLogger(__name__)
 
     def get_outgoing_connection(self, address: str):
@@ -196,7 +197,7 @@ class TorService(StoppableThread, Closable):
         self._connection_settings = connection_settings
         self._controller: Controller = None
         self._tor: subprocess.Popen = None
-        self._hidden_service_start_observers: List(HiddenServiceStartObserver) = []
+        self.hidden_service_start_event = Event()
         self._logger = logging.getLogger(__name__)
 
     def run(self):
@@ -210,13 +211,6 @@ class TorService(StoppableThread, Closable):
             self._controller.close()
         if self._tor != None:
             self._tor.terminate()
-
-    def add_hidden_service_start_observer(self, observer: HiddenServiceStartObserver):
-        self._hidden_service_start_observers.append(observer)
-
-    def _notify_hidden_service_start_observers(self):
-        for observer in self._hidden_service_start_observers:
-            observer.update()
 
     def _start_hidden_service(self):
         self._tor = launch_tor_with_config(tor_cmd=TorConfiguration.get_tor_executable_path(), take_ownership=True, config = {
@@ -239,4 +233,4 @@ class TorService(StoppableThread, Closable):
             TorConfiguration.save_hidden_service_id(response.service_id)
             
         self._logger.info(f'Service established at {response.service_id}.onion')
-        self._notify_hidden_service_start_observers()
+        self.hidden_service_start_event.notify()

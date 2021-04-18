@@ -37,6 +37,7 @@ class MessageCommand(SaveableCommand):
         return []
 
     def save(self, address: str):
+        super().save(address)
         # no need to save the same command again
         saved_command_repository = SavedCommandRepository()
         if saved_command_repository.get_by_command(self):
@@ -86,6 +87,7 @@ class HelloCommand(InitiationCommand, SingleUseCommand, SaveableCommand):
             return []
          
     def save(self, address: str):
+        super().save(address)
         # only one hello per contact can be saved at once - more doesn't make sense
         saved_command_repository = SavedCommandRepository()
         contact: Contact = ContactRepository().get_by_address(address)
@@ -164,6 +166,7 @@ class ApproveCommand(InitiationCommand, SaveableCommand):
         return []
 
     def save(self, address: str):
+        super().save(address)
         # only save if approved, since the other side needs to know we're approving
         # there should only be a single approve per contact for now
         if self.approved:

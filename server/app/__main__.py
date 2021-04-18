@@ -1,10 +1,10 @@
+from app.api.events import on_agent_removed, on_connection_failure, on_hidden_service_start
 from app.api.event_handlers import BacklogHandler
 from app.messaging.messaging_commands import ImAliveCommand
 from app.messaging.messaging_receivers import ImAliveCommandReceiver
 from app.messaging.authenticator import Authenticator
 from app.shared.logging import initialize_logging
 from app.networking.topology import Topology
-from app.api.observers import OfflineEmitterAgentRemoveCallback, OfflineEmitterConnectionFailureCallback, TorHiddenServiceStartObserver
 from app.infrastructure.message import MessageRepository
 from app.infrastructure.contact import ContactRepository
 from app.api.receivers import ApproveCommandReceiver, AuthenticationReceiver, ConnectionEstablishedReceiver, HelloCommandReceiver, MessageCommandReceiver
@@ -48,13 +48,13 @@ def main():
 
     command_mapper = CommandMapper()
     command_handler = CommandHandler(command_mapper)
-    topology = Topology(OfflineEmitterAgentRemoveCallback())
-    broker = Broker(command_mapper, command_handler, topology, OfflineEmitterConnectionFailureCallback())
+    topology = Topology()
+    broker = Broker(command_mapper, command_handler, topology)
     authenticator = Authenticator(command_mapper, command_handler, broker, topology)
     tor_server = TorServer(server_settings, broker, topology, authenticator)
     tor_service = TorService(server_settings)
-    tor_service.add_hidden_service_start_observer(TorHiddenServiceStartObserver())
     
+    InstanceContainer.register_singleton(CommandMapper, command_mapper)
     InstanceContainer.register_singleton(Topology, topology)
     InstanceContainer.register_singleton(Broker, broker)
     InstanceContainer.register_singleton(TorServer, tor_server)
@@ -63,9 +63,10 @@ def main():
 
     register_command_mappings(command_mapper)
     register_commands(command_handler, topology)
+    topology.agent_removed_event += on_agent_removed
+    tor_service.hidden_service_start_event += on_hidden_service_start
+    broker.connection_failure_event += on_connection_failure
     broker.loop_event += BacklogHandler().handle_backlog
-
-    InstanceContainer.register_singleton(CommandMapper, command_mapper)
 
     broker.start()
     tor_server.start()
