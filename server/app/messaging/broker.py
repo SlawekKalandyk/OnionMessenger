@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
+from app.shared.event import Event
 from app.shared.config import TorConfiguration
-from app.messaging.messaging_commands import ImAliveCommand, SingleUseCommand
+from app.messaging.messaging_commands import ImAliveCommand, SaveableCommand, SingleUseCommand
 import logging
 from app.networking.topology import Topology
 from queue import Queue
@@ -21,14 +22,8 @@ class Payload:
     address: ConnectionSettings
 
 
-class ConnectionFailureCallback(ABC):
-    @abstractmethod
-    def on_connection_failure(self, address: str):
-        pass
-
-
 class Broker(StoppableThread, PacketHandler):
-    def __init__(self, command_mapper: CommandMapper, command_handler: BaseCommandHandler, topology: Topology, connection_failure_callback: ConnectionFailureCallback = None):
+    def __init__(self, command_mapper: CommandMapper, command_handler: BaseCommandHandler, topology: Topology):
         super().__init__()
         self._send_queue = Queue()
         self._recv_queue = Queue()
@@ -36,16 +31,20 @@ class Broker(StoppableThread, PacketHandler):
         self._command_handler = command_handler
         self._topology = topology
         self._tor_connection_factory = TorConnectionFactory(topology)
-        self._connection_failure_callback = connection_failure_callback
         self._imalive_interval = 30
+        self.service_started = False
+        self.connection_failure_event = Event()
+        self.loop_event = Event()
         self._logger = logging.getLogger(__name__)
 
     def run(self):
         while True:
-            self._handle_incoming()
-            self._handle_outgoing()
-            self._handle_imalive()
-            sleep(0.1)
+            if self.service_started:
+                self._handle_incoming()
+                self._handle_outgoing()
+                self._handle_imalive()
+                self.loop_event.notify(self)
+                sleep(0.1)
 
     def handle(self, packet: Packet):
         payload = Payload(self._command_mapper.map_from_bytes(packet.data), packet.address)
@@ -58,21 +57,24 @@ class Broker(StoppableThread, PacketHandler):
     def send(self, payload: Payload):
         self._send_queue.put(payload)
         self._logger.info(f'Queued: {payload.command.__class__.__name__} sent to {payload.address}')
-            
+
     def _handle_outgoing(self):
         while not self._send_queue.empty():
             payload: Payload = self._send_queue.get()
             packet = Packet(self._command_mapper.map_to_bytes(payload.command), payload.address)
             connection_action_result = self._tor_connection_factory.get_outgoing_connection(payload.address.address)
             if connection_action_result.valid:
+                # if send fails, save command
+                if isinstance(payload.command, SaveableCommand):
+                    connection_action_result.value.failed_to_send_event += payload.command.save
+                connection_action_result.value.before_sending_event += payload.command.before_sending
+                connection_action_result.value.after_sending_event += payload.command.after_sending
                 connection_action_result.value.send(packet)
-                if isinstance(payload.command, SingleUseCommand):
-                    agent = self._topology.get_by_address(payload.address.address)
-                    self._topology.remove(agent)
-                    agent.close_sockets()
             else:
-                if self._connection_failure_callback:
-                    self._connection_failure_callback.on_connection_failure(payload.address.address)
+                # if connection couldn't be established, save command
+                self.connection_failure_event.notify(payload.address.address)
+                if isinstance(payload.command, SaveableCommand):
+                    payload.command.save(payload.address.address)
 
     def _handle_incoming(self):
         while not self._recv_queue.empty():
@@ -92,6 +94,7 @@ class Broker(StoppableThread, PacketHandler):
                 connection_settings = ConnectionSettings(agent.address, TorConfiguration.get_tor_server_port())
                 payload = Payload(imalive, connection_settings)
                 self.send(payload)
+
         # TODO: close inactive agents
         # May not be needed, if ImAlive (or any command really) gets a ConnectionAbortedError
         # the connection is shut down

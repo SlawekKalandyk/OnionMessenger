@@ -1,3 +1,6 @@
+from app.shared.container import InstanceContainer
+from app.networking.topology import Agent, Topology
+from app.infrastructure.saved_command import SavedCommand, SavedCommandRepository
 from app.shared.utility import get_onion_address_from_public_key
 from app.shared.config import TorConfiguration
 from app.shared.signature import Signature
@@ -7,16 +10,16 @@ from typing import List
 import datetime
 
 from app.messaging.base import Command
-from app.messaging.messaging_commands import InitiationCommand, SingleUseCommand
+from app.messaging.messaging_commands import InitiationCommand, SaveableCommand, SingleUseCommand
 from app.infrastructure.message import ContentType, MessageAuthor, MessageState, Message
-from app.infrastructure.contact import Contact
-from app.api.receivers import AuthenticationReceiver, MessageCommandReceiver, HelloCommandReceiver, ApproveCommandReceiver
+from app.infrastructure.contact import Contact, ContactRepository
+from app.api.receivers import AuthenticationReceiver, ConnectionEstablishedReceiver, MessageCommandReceiver, HelloCommandReceiver, ApproveCommandReceiver
 from app.api.socket_emitter import emit_contact_online, emit_message, emit_new_contact_pending_self_approval, emit_received_contact_approval
 
 
 @dataclass_json
 @dataclass(frozen=True)
-class MessageCommand(Command):
+class MessageCommand(SaveableCommand):
     content: str
     content_type: ContentType
 
@@ -33,10 +36,25 @@ class MessageCommand(Command):
             emit_message(message)
         return []
 
+    def save(self, address: str):
+        super().save(address)
+        # no need to save the same command again
+        saved_command_repository = SavedCommandRepository()
+        if saved_command_repository.get_by_command(self):
+            return
+        contact: Contact = ContactRepository().get_by_address(address)
+        saved_command_repository.add(SavedCommand(interlocutor=contact, command=self, identifier=self.get_identifier(), initiate=False))
+
+    def after_sending(self, address: str):
+        saved_command_repository = SavedCommandRepository()
+        saved_command = saved_command_repository.get_by_command(self)
+        if saved_command:
+            saved_command_repository.remove(saved_command)
+
 
 @dataclass_json
 @dataclass(frozen=True)
-class HelloCommand(InitiationCommand, SingleUseCommand):
+class HelloCommand(InitiationCommand, SingleUseCommand, SaveableCommand):
     public_key: str = TorConfiguration.get_hidden_service_public_key()
 
     @classmethod
@@ -50,12 +68,42 @@ class HelloCommand(InitiationCommand, SingleUseCommand):
             self._close_sockets(receiver.topology, self.initiation_context.agent)
             return []
 
-        new_contact = Contact(contact_id=self.source.split('.')[0], approved=False, awaiting_approval=True, address=self.source, public_key=self.public_key)
-        receiver.contact_repository.add(new_contact)
-        emit_new_contact_pending_self_approval(new_contact)
-        # close connection - HelloCommand should be single-use only
-        self._close_sockets(receiver.topology, self.initiation_context.agent)
-        return []
+        contact_id = self.source.split('.')[0]
+        contact = receiver.contact_repository.get_by_id(contact_id)
+        if not contact:
+            new_contact = Contact(contact_id=contact_id, approved=False, awaiting_approval=True, address=self.source, public_key=self.public_key)
+            receiver.contact_repository.add(new_contact)
+            emit_new_contact_pending_self_approval(new_contact)
+            # contact is new, awaiting approval - close sockets
+            self._close_sockets(receiver.topology, self.initiation_context.agent)
+            return []
+        else:
+            # if approved, send approve, don't need to close sockets
+            if contact.approved:
+                approve_command = ApproveCommand(approved=contact.approved)
+                return [approve_command]
+
+            # if not approved - ignore for now
+            self._close_sockets(receiver.topology, self.initiation_context.agent)
+            return []
+         
+    def save(self, address: str):
+        super().save(address)
+        # only one hello per contact can be saved at once - more doesn't make sense
+        saved_command_repository = SavedCommandRepository()
+        contact: Contact = ContactRepository().get_by_address(address)
+        if saved_command_repository.get_by_identifier_and_contact(self.get_identifier(), contact):
+            return
+        saved_command_repository.add(SavedCommand(interlocutor=contact, command=self, identifier=self.get_identifier(), initiate=True))
+
+    def after_sending(self, address: str):
+        topology: Topology = InstanceContainer.resolve(Topology)
+        agent = topology.get_by_address(address)
+        self._close_sockets(topology, agent)
+        saved_command_repository = SavedCommandRepository()
+        saved_command = saved_command_repository.get_by_command(self)
+        if saved_command:
+            saved_command_repository.remove(saved_command)
 
 
 @dataclass_json
@@ -68,22 +116,26 @@ class AuthenticationCommand(InitiationCommand):
     def invoke(self, receiver: AuthenticationReceiver) -> List[Command]:
         contact = receiver.contact_repository.get_by_address(self.context.sender.address)
         # if authentication was sent from someone who is not in your contacts, ignore it and close sockets
-        if not contact or not Signature.verify(contact.public_key, self.signed_uuid):
+        if not contact or not Signature.verify(contact.public_key, self.signed_uuid) or not contact.approved:
             self._close_sockets(receiver.topology, self.initiation_context.agent)
             return []
 
-        # if there's no outgoing connection, create one
         emit_contact_online(contact)
         if not self.initiation_context.agent.send_socket:
+            # TODO: send messages after establishing outgoing connection
+            # if there's no outgoing connection, create one
             auth_command = AuthenticationCommand()
             return [auth_command]
-
-        return []
+        else:
+            # if there is an outgoing connection, check if there are any backlogged messages, send ConnectionEstablishedCommand with messages
+            saved_command_repository = SavedCommandRepository()
+            messages = list(map(lambda x: x.command, saved_command_repository.get_by_identifier_and_contact(MessageCommand.get_identifier(), contact)))
+            return messages + [ConnectionEstablishedCommand()]
 
 
 @dataclass_json
 @dataclass(frozen=True)
-class ApproveCommand(InitiationCommand):
+class ApproveCommand(InitiationCommand, SaveableCommand):
     approved: bool = False
     public_key: str = TorConfiguration.get_hidden_service_public_key()
 
@@ -117,3 +169,38 @@ class ApproveCommand(InitiationCommand):
         # TODO: What to do when the other person disapproves? Give option to resend/remove?
         
         return []
+
+    def save(self, address: str):
+        super().save(address)
+        # only save if approved, since the other side needs to know we're approving
+        # there should only be a single approve per contact for now
+        if self.approved:
+            saved_command_repository = SavedCommandRepository()
+            contact: Contact = ContactRepository().get_by_address(address)
+            if saved_command_repository.get_by_identifier_and_contact(self.get_identifier(), contact):
+                return
+            saved_command_repository.add(SavedCommand(interlocutor=contact, command=self, identifier=self.get_identifier(), initiate=True))
+
+    def after_sending(self, address: str):
+        if not self.approved:
+            topology: Topology = InstanceContainer.resolve(Topology)
+            agent = topology.get_by_address(address)
+            self._close_sockets(topology, agent)
+        saved_command_repository = SavedCommandRepository()
+        saved_command = saved_command_repository.get_by_command(self)
+        if saved_command:
+            saved_command_repository.remove(saved_command)
+
+
+@dataclass_json
+@dataclass(frozen=True)
+class ConnectionEstablishedCommand(Command):
+    @classmethod
+    def get_identifier(cls) -> str:
+        return 'CONNESTBL'
+
+    def invoke(self, receiver: ConnectionEstablishedReceiver):
+        contact = receiver.contact_repository.get_by_address(self.context.sender.address)
+        saved_command_repository = SavedCommandRepository()
+        messages = list(map(lambda x: x.command, saved_command_repository.get_by_identifier_and_contact(MessageCommand.get_identifier(), contact)))
+        return messages

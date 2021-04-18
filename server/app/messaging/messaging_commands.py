@@ -1,3 +1,4 @@
+import logging
 from app.messaging.messaging_receivers import ImAliveCommandReceiver
 from app.shared.utility import generate_random_guid
 from app.shared.signature import Signature
@@ -29,6 +30,13 @@ class InitiationCommand(Command):
 @dataclass(frozen=True)
 class SingleUseCommand(Command):
     pass
+
+
+@dataclass_json
+@dataclass(frozen=True)
+class SaveableCommand(Command):
+    def save(self, address):
+        logging.getLogger(__name__).info(f'Saving {self}')
 
 
 @dataclass_json

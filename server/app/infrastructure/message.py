@@ -63,4 +63,4 @@ class Message(BaseModel):
 
 class MessageRepository(metaclass=Singleton):
     def add(self, message: Message):
-        message.save()
+        message.save(force_insert=True)
