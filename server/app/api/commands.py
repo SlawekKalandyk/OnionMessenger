@@ -100,7 +100,7 @@ class HelloCommand(InitiationCommand, SingleUseCommand, SaveableCommand):
         agent = topology.get_by_address(address)
         self._close_sockets(topology, agent)
         saved_command_repository = SavedCommandRepository()
-        saved_command = saved_command_repository.get_by_command_and_address(self, address)
+        saved_command = saved_command_repository.get_by_command(self)
         if saved_command:
             saved_command_repository.remove(saved_command)
 
@@ -186,7 +186,7 @@ class ApproveCommand(InitiationCommand, SaveableCommand):
             agent = topology.get_by_address(address)
             self._close_sockets(topology, agent)
         saved_command_repository = SavedCommandRepository()
-        saved_command = saved_command_repository.get_by_command_and_address(self, address)
+        saved_command = saved_command_repository.get_by_command(self)
         if saved_command:
             saved_command_repository.remove(saved_command)
 
