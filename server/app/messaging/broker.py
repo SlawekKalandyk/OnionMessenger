@@ -44,7 +44,7 @@ class Broker(StoppableThread, PacketHandler):
                 self._handle_outgoing()
                 self._handle_imalive()
                 self.loop_event.notify(self)
-                sleep(0.1)
+            sleep(0.1)
 
     def handle(self, packet: Packet):
         payload = Payload(self._command_mapper.map_from_bytes(packet.data), packet.address)
