@@ -6,7 +6,6 @@ from app.shared.action_result import ActionResult
 import logging
 from app.networking.authentication import Authentication
 from app.networking.topology import Agent, Topology
-from typing import List
 from stem.process import launch_tor_with_config
 from stem.process import subprocess
 from stem.control import Controller
@@ -14,8 +13,7 @@ import socket
 import socks
 from time import sleep, time
 import select
-
-from app.networking.base import ConnectionSettings, HiddenServiceStartObserver, Packet, PacketHandler
+from app.networking.base import ConnectionSettings, Packet, PacketHandler
 from app.shared.helpful_abstractions import Closable
 from app.shared.config import PacketConfiguration, TorConfiguration
 from app.shared.multithreading import StoppableThread
@@ -121,14 +119,18 @@ class PacketSizeOverLimitError(Exception):
     pass
 
 
-class TorConnection():
+class TorConnection(StoppableThread):
     def __init__(self, sock: socket.socket, topology: Topology):
+        super().__init__()
         self._socket = sock
         self._topology = topology
         self.failed_to_send_event = Event()
         self.before_sending_event = Event()
         self.after_sending_event = Event()
         self._logger = logging.getLogger(__name__)
+
+    def run(self, packet: Packet):
+        self.send(packet)
 
     def send(self, packet: Packet):
         """
