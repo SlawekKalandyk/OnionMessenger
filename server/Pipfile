@@ -17,6 +17,7 @@ flask-cors = "*"
 marshmallow = "*"
 flask-socketio = "*"
 pynacl = "*"
+pytest = "*"
 
 [requires]
 python_version = "3.9"
