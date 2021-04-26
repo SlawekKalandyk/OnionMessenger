@@ -1,13 +1,10 @@
-from app.api.events import on_agent_removed, on_connection_failure, on_hidden_service_start
-from app.api.event_handlers import BacklogHandler
+from app.api.event_handlers import BacklogHandler, on_agent_removed, on_connection_failure, on_hidden_service_start
 from app.messaging.messaging_commands import ImAliveCommand
-from app.messaging.messaging_receivers import ImAliveCommandReceiver
 from app.messaging.authenticator import Authenticator
 from app.shared.logging import initialize_logging
 from app.networking.topology import Topology
 from app.infrastructure.message import MessageRepository
 from app.infrastructure.contact import ContactRepository
-from app.api.receivers import ApproveCommandReceiver, AuthenticationReceiver, ConnectionEstablishedReceiver, HelloCommandReceiver, MessageCommandReceiver
 from app.networking.tor import TorServer, TorService
 from app.networking.base import ConnectionSettings
 from app.api.commands import ApproveCommand, AuthenticationCommand, ConnectionEstablishedCommand, HelloCommand, MessageCommand
@@ -18,6 +15,7 @@ from app.shared.container import InstanceContainer
 from app.api.endpoints import flaskapp, socketIO
 from flask_socketio import SocketIO
 
+
 def register_command_mappings(command_mapper: CommandMapper):
     command_mapper.register(MessageCommand)
     command_mapper.register(HelloCommand)
@@ -25,21 +23,7 @@ def register_command_mappings(command_mapper: CommandMapper):
     command_mapper.register(AuthenticationCommand)
     command_mapper.register(ImAliveCommand)
     command_mapper.register(ConnectionEstablishedCommand)
-    
 
-def register_commands(command_handler: CommandHandler, topology: Topology):
-    message_receiver = MessageCommandReceiver(ContactRepository(), MessageRepository())
-    command_handler.register(MessageCommand, message_receiver)
-    hello_receiver = HelloCommandReceiver(ContactRepository(), topology)
-    command_handler.register(HelloCommand, hello_receiver)
-    approve_receiver = ApproveCommandReceiver(ContactRepository(), topology)
-    command_handler.register(ApproveCommand, approve_receiver)
-    authentication_receiver = AuthenticationReceiver(ContactRepository(), topology)
-    command_handler.register(AuthenticationCommand, authentication_receiver)
-    im_alive_receiver = ImAliveCommandReceiver(topology)
-    command_handler.register(ImAliveCommand, im_alive_receiver)
-    connection_established_receiver = ConnectionEstablishedReceiver(ContactRepository(), topology)
-    command_handler.register(ConnectionEstablishedCommand, connection_established_receiver)
 
 def main():
     initialize_logging()
@@ -47,7 +31,7 @@ def main():
     server_settings = ConnectionSettings('127.0.0.1', 39124)
 
     command_mapper = CommandMapper()
-    command_handler = CommandHandler(command_mapper)
+    command_handler = CommandHandler()
     topology = Topology()
     broker = Broker(command_mapper, command_handler, topology)
     authenticator = Authenticator(command_mapper, command_handler, broker, topology)
@@ -62,7 +46,6 @@ def main():
     InstanceContainer.register_singleton(SocketIO, socketIO)
 
     register_command_mappings(command_mapper)
-    register_commands(command_handler, topology)
     topology.agent_removed_event += on_agent_removed
     tor_service.hidden_service_start_event += on_hidden_service_start
     broker.connection_failure_event += on_connection_failure

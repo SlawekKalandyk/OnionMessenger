@@ -6,9 +6,6 @@ from abc import ABC, abstractmethod
 from typing import Dict, Tuple
 from re import search
 
-class Receiver(ABC):
-    pass
-
 
 @dataclass(frozen=False)
 class CommandContext:
@@ -30,7 +27,7 @@ class Command(ABC):
         pass
 
     @abstractmethod
-    def invoke(self, receiver: Receiver):
+    def invoke(self):
         pass
 
     def before_sending(self, *args, **kwargs):

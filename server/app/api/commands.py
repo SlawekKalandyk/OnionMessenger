@@ -11,9 +11,8 @@ import datetime
 
 from app.messaging.base import Command
 from app.messaging.messaging_commands import InitiationCommand, SaveableCommand, SingleUseCommand
-from app.infrastructure.message import ContentType, MessageAuthor, MessageState, Message
+from app.infrastructure.message import ContentType, MessageAuthor, MessageRepository, MessageState, Message
 from app.infrastructure.contact import Contact, ContactRepository
-from app.api.receivers import AuthenticationReceiver, ConnectionEstablishedReceiver, MessageCommandReceiver, HelloCommandReceiver, ApproveCommandReceiver
 from app.api.socket_emitter import emit_contact_online, emit_message, emit_new_contact_pending_self_approval, emit_received_contact_approval
 
 
@@ -27,12 +26,15 @@ class MessageCommand(SaveableCommand):
     def get_identifier(cls) -> str: 
         return 'MESSAGE'
 
-    def invoke(self, receiver: MessageCommandReceiver) -> List[Command]:
-        contact: Contact = receiver.contact_repository.get_by_address(self.context.sender.address)
+    def invoke(self) -> List[Command]:
+        contact_repository = ContactRepository()
+        message_repository = MessageRepository()
+        
+        contact: Contact = contact_repository.get_by_address(self.context.sender.address)
         if contact and contact.approved and not contact.awaiting_approval:
             message = Message(interlocutor=contact, content=self.content, content_type=self.content_type, \
                 timestamp=datetime.datetime.now(), message_author=MessageAuthor.INTERLOCUTOR, message_state=MessageState.RECEIVED)
-            receiver.message_repository.add(message)
+            message_repository.add(message)
             emit_message(message)
         return []
 
@@ -61,21 +63,24 @@ class HelloCommand(InitiationCommand, SingleUseCommand, SaveableCommand):
     def get_identifier(cls) -> str:
         return 'HELLO'
 
-    def invoke(self, receiver: HelloCommandReceiver) -> List[Command]:
+    def invoke(self) -> List[Command]: 
+        topology: Topology = InstanceContainer.resolve(Topology)
+        contact_repository = ContactRepository()
+
         # if address derived from public key is not equal to received source address or signature can't be verified with received public key, ignore it and close sockets
         derived_address = get_onion_address_from_public_key(self.public_key)
         if derived_address != self.source or not Signature.verify(self.public_key, self.signed_uuid):
-            self._close_sockets(receiver.topology, self.initiation_context.agent)
+            self._close_sockets(topology, self.initiation_context.agent)
             return []
 
         contact_id = self.source.split('.')[0]
-        contact = receiver.contact_repository.get_by_id(contact_id)
+        contact: Contact = contact_repository.get_by_id(contact_id)
         if not contact:
             new_contact = Contact(contact_id=contact_id, approved=False, awaiting_approval=True, address=self.source, public_key=self.public_key)
-            receiver.contact_repository.add(new_contact)
+            contact_repository.add(new_contact)
             emit_new_contact_pending_self_approval(new_contact)
             # contact is new, awaiting approval - close sockets
-            self._close_sockets(receiver.topology, self.initiation_context.agent)
+            self._close_sockets(topology, self.initiation_context.agent)
             return []
         else:
             # if approved, send approve, don't need to close sockets
@@ -84,7 +89,7 @@ class HelloCommand(InitiationCommand, SingleUseCommand, SaveableCommand):
                 return [approve_command]
 
             # if not approved - ignore for now
-            self._close_sockets(receiver.topology, self.initiation_context.agent)
+            self._close_sockets(topology, self.initiation_context.agent)
             return []
          
     def save(self, address: str):
@@ -113,11 +118,14 @@ class AuthenticationCommand(InitiationCommand):
     def get_identifier(cls) -> str:
         return 'AUTHENTICATION'
 
-    def invoke(self, receiver: AuthenticationReceiver) -> List[Command]:
-        contact = receiver.contact_repository.get_by_address(self.context.sender.address)
+    def invoke(self) -> List[Command]:
+        topology: Topology = InstanceContainer.resolve(Topology)
+        contact_repository = ContactRepository()
+
+        contact = contact_repository.get_by_address(self.context.sender.address)
         # if authentication was sent from someone who is not in your contacts, ignore it and close sockets
         if not contact or not Signature.verify(contact.public_key, self.signed_uuid) or not contact.approved:
-            self._close_sockets(receiver.topology, self.initiation_context.agent)
+            self._close_sockets(topology, self.initiation_context.agent)
             return []
 
         emit_contact_online(contact)
@@ -143,23 +151,26 @@ class ApproveCommand(InitiationCommand, SaveableCommand):
     def get_identifier(cls) -> str:
         return 'APPROVE'
 
-    def invoke(self, receiver: ApproveCommandReceiver) -> List[Command]:
+    def invoke(self) -> List[Command]:
+        topology: Topology = InstanceContainer.resolve(Topology)
+        contact_repository = ContactRepository()
+
         # if address derived from public key is not equal to received source address or signature can't be verified with received public key, ignore it and close sockets
         derived_address = get_onion_address_from_public_key(self.public_key)
         if derived_address != self.source or not Signature.verify(self.public_key, self.signed_uuid):
-            self._close_sockets(receiver.topology, self.initiation_context.agent)
+            self._close_sockets(topology, self.initiation_context.agent)
             return []
 
         # if approval was sent from someone who is not in your contacts, ignore it and close sockets
-        contact = receiver.contact_repository.get_by_address(self.context.sender.address)
+        contact = contact_repository.get_by_address(self.context.sender.address)
         if not contact:
-            self._close_sockets(receiver.topology, self.initiation_context.agent)
+            self._close_sockets(topology, self.initiation_context.agent)
             return []
 
         contact.public_key = self.public_key
         contact.approved = self.approved
         contact.awaiting_approval = False
-        receiver.contact_repository.update(contact)
+        contact_repository.update(contact)
         
         # if approved, open socket for sending messages since a receiving one is already open
         if self.approved:
@@ -199,8 +210,9 @@ class ConnectionEstablishedCommand(Command):
     def get_identifier(cls) -> str:
         return 'CONNESTBL'
 
-    def invoke(self, receiver: ConnectionEstablishedReceiver):
-        contact = receiver.contact_repository.get_by_address(self.context.sender.address)
+    def invoke(self):
+        contact_repository = ContactRepository()
+        contact = contact_repository.get_by_address(self.context.sender.address)
         saved_command_repository = SavedCommandRepository()
         messages = list(map(lambda x: x.command, saved_command_repository.get_by_identifier_and_contact(MessageCommand.get_identifier(), contact)))
         return messages

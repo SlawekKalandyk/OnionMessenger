@@ -1,5 +1,4 @@
 import logging
-from app.messaging.messaging_receivers import ImAliveCommandReceiver
 from app.shared.utility import generate_random_guid
 from app.shared.signature import Signature
 from app.networking.topology import Agent
@@ -49,5 +48,5 @@ class ImAliveCommand(Command):
     def get_identifier(cls) -> str:
         return 'IMALIVE'
 
-    def invoke(self, receiver: ImAliveCommandReceiver):
+    def invoke(self):
         pass

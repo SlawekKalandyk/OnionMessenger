@@ -1,17 +1,15 @@
-from abc import ABC, abstractmethod
 from app.shared.event import Event
 from app.shared.config import TorConfiguration
-from app.messaging.messaging_commands import ImAliveCommand, SaveableCommand, SingleUseCommand
+from app.messaging.messaging_commands import ImAliveCommand, SaveableCommand
 import logging
 from app.networking.topology import Topology
 from queue import Queue
 from time import sleep, time
 from typing import Iterable
 from dataclasses import dataclass
-
 from app.messaging.base import CommandMapper, Command
 from app.messaging.command_handler import BaseCommandHandler
-from app.networking.tor import TorConnectionFactory
+from app.networking.tor import TorConnection, TorConnectionFactory
 from app.networking.base import ConnectionSettings, Packet, PacketHandler
 from app.shared.multithreading import StoppableThread
 
@@ -64,12 +62,13 @@ class Broker(StoppableThread, PacketHandler):
             packet = Packet(self._command_mapper.map_to_bytes(payload.command), payload.address)
             connection_action_result = self._tor_connection_factory.get_outgoing_connection(payload.address.address)
             if connection_action_result.valid:
+                connection: TorConnection = connection_action_result.value
                 # if send fails, save command
                 if isinstance(payload.command, SaveableCommand):
-                    connection_action_result.value.failed_to_send_event += payload.command.save
-                connection_action_result.value.before_sending_event += payload.command.before_sending
-                connection_action_result.value.after_sending_event += payload.command.after_sending
-                connection_action_result.value.send(packet)
+                    connection.failed_to_send_event += payload.command.save
+                connection.before_sending_event += payload.command.before_sending
+                connection.after_sending_event += payload.command.after_sending
+                connection.start(packet)
             else:
                 # if connection couldn't be established, save command
                 self.connection_failure_event.notify(payload.address.address)
