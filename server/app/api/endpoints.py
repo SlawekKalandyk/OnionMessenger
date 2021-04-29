@@ -137,11 +137,20 @@ def change_name(id):
 @flaskapp.route("/api/contacts/<string:id>", methods=["DELETE"])
 def remove_contact(id):
     repository = ContactRepository()
-    contact = repository.get_by_id(id)
+    contact: Contact = repository.get_by_id(id)
     if not contact:
         return {}, 404
 
-    repository.remove()
+    contact.approved = False
+    contact.awaiting_approval = False
+    repository.update(contact)
+
+    broker: Broker = InstanceContainer.resolve(Broker)
+    command = ApproveCommand(approved=contact.approved)
+    address = ConnectionSettings(contact.address, TorConfiguration.get_tor_server_port())
+    payload = Payload(command, address)
+    broker.send(payload)
+
     return {}, 204
 
 
@@ -164,7 +173,7 @@ def approve_contact_for_further_communication(id):
         return {}, 400
 
     repository = ContactRepository()
-    contact = repository.get_by_id(id)
+    contact: Contact = repository.get_by_id(id)
     if not contact:
         return {}, 404
 
@@ -181,12 +190,11 @@ def approve_contact_for_further_communication(id):
     if is_approved:
         emit_newly_approved_contact(contact)
     else:
-        # if not approved, remove contact, close connection after sending ApproveCommand
+        # if not approved, close connection after sending ApproveCommand
         topology: Topology = InstanceContainer.resolve(Topology)
         agent: Agent = topology.get_by_address(contact.address)
         topology.remove(agent)
         agent.close_sockets()
-        repository.remove(contact)
         emit_newly_not_approved_contact(contact)
 
     return {}, 204

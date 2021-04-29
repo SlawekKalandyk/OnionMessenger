@@ -6,6 +6,7 @@
 
 .contact-name {
     width: 95%;
+    align-self: center;
     flex: 0 1 auto;
 }
 .contact-undetermined {
@@ -24,4 +25,8 @@
     background-color: red;
     flex: 0 1 auto;
     width: 5%;
+}
+
+.contact-remove {
+    flex: 0 1 auto;
 }

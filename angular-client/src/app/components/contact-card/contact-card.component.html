@@ -1,7 +1,10 @@
-<div class="contact-container">
+ <div class="contact-container" (mouseenter)="onMouseEnter()" (mouseleave)="onMouseLeave()">
     <div class="contact-name">
         {{contact.name}}
     </div>
     <div [ngClass]="contact.online.valueOf() === 2 ? 'contact-undetermined' : contact.online.valueOf() === 0 ? 'contact-online' : 'contact-offline'">
+    </div>
+    <div class="contact-remove" *ngIf="displayButtons">
+        <button mat-stroked-button (click)="onDelete()" class="contact-delete-button">Delete</button>
     </div>
 </div>

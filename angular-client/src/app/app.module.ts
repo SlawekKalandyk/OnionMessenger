@@ -29,6 +29,7 @@ import { UserSettingsComponent } from './components/user-settings/user-settings.
 import { PendingContactsComponent } from './components/pending-contacts/pending-contacts.component';
 import { PendingContactCardComponent } from './components/pending-contact-card/pending-contact-card.component';
 import { AddContactNameOnApproveDialogComponent } from './dialogs/add-contact-name-on-approve-dialog/add-contact-name-on-approve-dialog.component';
+import { QuestionRemoveContactDialogComponent } from './dialogs/question-remove-contact-dialog/question-remove-contact-dialog.component';
 
 @NgModule({
   declarations: [
@@ -44,6 +45,7 @@ import { AddContactNameOnApproveDialogComponent } from './dialogs/add-contact-na
     PendingContactsComponent,
     PendingContactCardComponent,
     AddContactNameOnApproveDialogComponent,
+    QuestionRemoveContactDialogComponent,
   ],
   imports: [
     BrowserModule,
