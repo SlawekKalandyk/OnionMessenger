@@ -119,18 +119,14 @@ class PacketSizeOverLimitError(Exception):
     pass
 
 
-class TorConnection(StoppableThread):
+class TorConnection():
     def __init__(self, sock: socket.socket, topology: Topology):
-        super().__init__()
         self._socket = sock
         self._topology = topology
         self.failed_to_send_event = Event()
         self.before_sending_event = Event()
         self.after_sending_event = Event()
         self._logger = logging.getLogger(__name__)
-
-    def run(self, packet: Packet):
-        self.send(packet)
 
     def send(self, packet: Packet):
         """

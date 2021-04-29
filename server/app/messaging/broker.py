@@ -1,3 +1,4 @@
+from threading import Thread
 from app.shared.event import Event
 from app.shared.config import TorConfiguration
 from app.messaging.messaging_commands import ImAliveCommand, SaveableCommand
@@ -72,7 +73,8 @@ class Broker(StoppableThread, PacketHandler):
                     connection.failed_to_send_event += payload.command.save
                 connection.before_sending_event += payload.command.before_sending
                 connection.after_sending_event += payload.command.after_sending
-                connection.start(packet)
+                connection_thread = Thread(target=connection.send, args=(packet,))
+                connection_thread.start()
             else:
                 # if connection couldn't be established, save command
                 self.connection_failure_event.notify(payload.address.address)
