@@ -1,3 +1,4 @@
+from datetime import datetime
 from app.infrastructure.saved_command import SavedCommand
 from app.networking.topology import Agent, Topology
 from flask import Flask, g, request, jsonify
@@ -204,10 +205,11 @@ def approve_contact_for_further_communication(id):
 def send_message():
     message_json = request.get_json()
     try:
-        message = message_schema.load(message_json)
+        message: Message = message_schema.load(message_json)
     except ValidationError:
         return {}, 422
 
+    message.timestamp = datetime.now()
     repository = MessageRepository()
     repository.add(message)
     
