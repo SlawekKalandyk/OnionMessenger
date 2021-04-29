@@ -7,7 +7,7 @@ from queue import Queue
 from time import sleep, time
 from typing import Iterable
 from dataclasses import dataclass
-from app.messaging.base import CommandMapper, Command
+from app.messaging.base import CommandMapper, Command, CommandTypeNotRegisteredError
 from app.messaging.command_handler import BaseCommandHandler
 from app.networking.tor import TorConnection, TorConnectionFactory
 from app.networking.base import ConnectionSettings, Packet, PacketHandler
@@ -45,7 +45,11 @@ class Broker(StoppableThread, PacketHandler):
             sleep(0.1)
 
     def handle(self, packet: Packet):
-        payload = Payload(self._command_mapper.map_from_bytes(packet.data), packet.address)
+        try:
+            payload = Payload(self._command_mapper.map_from_bytes(packet.data), packet.address)
+        except CommandTypeNotRegisteredError:
+            self._logger.error(f'Packet received from {packet.address.address} contains an unregistered command')
+            return
         self.handle_payload(payload)
     
     def handle_payload(self, payload: Payload):

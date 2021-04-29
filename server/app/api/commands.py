@@ -162,7 +162,7 @@ class ApproveCommand(InitiationCommand, SaveableCommand):
             return []
 
         # if approval was sent from someone who is not in your contacts, ignore it and close sockets
-        contact = contact_repository.get_by_address(self.context.sender.address)
+        contact: Contact = contact_repository.get_by_address(self.context.sender.address)
         if not contact:
             self._close_sockets(topology, self.initiation_context.agent)
             return []
