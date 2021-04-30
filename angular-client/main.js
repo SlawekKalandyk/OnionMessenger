@@ -1,6 +1,6 @@
 'use strict';
 
-const { app, BrowserWindow } = require('electron');
+const { app, BrowserWindow, Menu } = require('electron');
 const url = require('url');
 const path = require('path');
 const tree_kill = require('tree-kill');
@@ -12,6 +12,7 @@ const EXEC_NAME = 'OnionMessengerServer'
 let mainWindow;
 var pid;
 
+Menu.setApplicationMenu(null);
 
 const isNotPackaged = () => {
     const fullPath = path.join(__dirname, 'src')

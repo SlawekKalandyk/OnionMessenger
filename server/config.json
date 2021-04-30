@@ -1,0 +1,6 @@
+{
+    "environment": "debug",
+    "debug_tor_path": "D:\\Programming\\tor-win32-0.4.4.5\\Tor\\tor.exe",
+    "staging_tor_path": "dist\\tor\\Tor\\tor.exe",
+    "prod_tor_path": "resources\\dist\\tor\\Tor\\tor.exe"
+}

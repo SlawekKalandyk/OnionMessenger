@@ -25,10 +25,19 @@ def register_command_mappings(command_mapper: CommandMapper):
     command_mapper.register(ConnectionEstablishedCommand)
 
 
+def is_port_in_use(port):
+    import socket
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        return s.connect_ex(('127.0.0.1', port)) == 0
+
+
 def main():
     initialize_logging()
 
-    server_settings = ConnectionSettings('127.0.0.1', 39124)
+    port = 39124
+    while (is_port_in_use(port)):
+        port += 1
+    server_settings = ConnectionSettings('127.0.0.1', port)
 
     command_mapper = CommandMapper()
     command_handler = CommandHandler()

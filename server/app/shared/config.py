@@ -32,8 +32,18 @@ class TorConfiguration(BaseConfiguration):
 
     @staticmethod
     def get_tor_executable_path():
-        return f'{os.getcwd()}\\dist\\tor\\Tor\\tor.exe'
-        #return 'D:\\Programming\\tor-win32-0.4.4.5\\Tor\\tor.exe'
+        if TorConfiguration._tor_exec_path:
+            return TorConfiguration._tor_exec_path
+
+        with open('config.json', 'r') as f:
+            config = json.load(f)
+
+        if not config or config['environment'] == 'debug':
+            return config['debug_tor_path']
+        if config['environment'] == 'staging':
+            return os.getcwd() + '\\' + config['staging_tor_path']
+        if config['environment'] == 'prod':
+            return os.getcwd() + '\\' + config['prod_tor_path']
 
     @staticmethod
     def save_hidden_service_private_key(key: str):
