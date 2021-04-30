@@ -40,7 +40,8 @@ function createWindow() {
         show: false,
         webPreferences: {
             nodeIntegration: true
-        }
+        },
+        icon: null
     });
     mainWindow.maximize();
     mainWindow.show();

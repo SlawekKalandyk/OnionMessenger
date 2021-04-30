@@ -29,6 +29,7 @@ class MessageCommand(SaveableCommand):
     def invoke(self) -> List[Command]:
         contact_repository = ContactRepository()
         message_repository = MessageRepository()
+        topology: Topology = InstanceContainer.resolve(Topology)
         
         contact: Contact = contact_repository.get_by_address(self.context.sender.address)
         if contact and contact.approved and not contact.awaiting_approval:
@@ -36,6 +37,9 @@ class MessageCommand(SaveableCommand):
                 timestamp=datetime.datetime.now(), message_author=MessageAuthor.INTERLOCUTOR, message_state=MessageState.RECEIVED)
             message_repository.add(message)
             emit_message(message)
+        else:
+            agent = topology.get_by_address(self.context.sender.address)
+            self._close_sockets(topology, agent)
         return []
 
     def save(self, address: str):
@@ -212,7 +216,12 @@ class ConnectionEstablishedCommand(Command):
 
     def invoke(self):
         contact_repository = ContactRepository()
+        topology: Topology = InstanceContainer.resolve(Topology)
         contact = contact_repository.get_by_address(self.context.sender.address)
+        if not contact:
+            agent = topology.get_by_address(self.context.sender.address)
+            self._close_sockets(topology, agent)
+            return []
         saved_command_repository = SavedCommandRepository()
         messages = list(map(lambda x: x.command, saved_command_repository.get_by_identifier_and_contact(MessageCommand.get_identifier(), contact)))
         return messages

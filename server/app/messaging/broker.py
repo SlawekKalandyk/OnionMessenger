@@ -99,7 +99,3 @@ class Broker(StoppableThread, PacketHandler):
                 connection_settings = ConnectionSettings(agent.address, TorConfiguration.get_tor_server_port())
                 payload = Payload(imalive, connection_settings)
                 self.send(payload)
-
-        # TODO: close inactive agents
-        # May not be needed, if ImAlive (or any command really) gets a ConnectionAbortedError
-        # the connection is shut down
