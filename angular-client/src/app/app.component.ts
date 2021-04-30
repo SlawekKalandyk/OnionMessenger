@@ -17,11 +17,13 @@ export class AppComponent implements OnInit{
   }
 
   ngOnInit() {
-    this.http.get<string>('http://127.0.0.1:5000/api/contacts').subscribe(response => {
+    this.currentContactService.currentContact.subscribe(response => this.isAnyContactActive = response != undefined);
+    this.socketService.getHiddenServiceStart().subscribe(_ => {
+      this.isHiddenServiceActive = true;
+      console.log('Hidden Service has started');
+      this.http.get<string>('http://127.0.0.1:5000/api/contacts').subscribe(response => {
       this.received = response;
     });
-
-    this.currentContactService.currentContact.subscribe(response => this.isAnyContactActive = response != undefined);
-    this.socketService.getHiddenServiceStart().subscribe(_ => this.isHiddenServiceActive = true);
+    });
   }
 }

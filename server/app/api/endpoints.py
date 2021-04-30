@@ -17,10 +17,13 @@ from app.infrastructure.contact import Contact, ContactRepository
 from app.infrastructure.message import Message, MessageRepository
 from app.api.schemas import ContactSchema, MessageSchema 
 
+# Hidden imports needed to let SocketIO be properly used when creating exe with pyinstaller
+from engineio.async_drivers import eventlet
+from engineio.async_drivers import threading
 
 flaskapp = Flask(__name__)
 CORS(flaskapp)
-socketIO = SocketIO(flaskapp, cors_allowed_origins="*")
+socketIO = SocketIO(flaskapp, cors_allowed_origins="*", async_mode='threading')
 
 contact_schema = ContactSchema()
 contacts_schema = ContactSchema(many=True)

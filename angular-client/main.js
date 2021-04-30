@@ -51,10 +51,16 @@ function createWindow() {
             slashes: true
         })
     );
-
     var executablePath = getServerExecPath();
     var child = require('child_process').spawn(executablePath);
-    pid = child.pid;
+
+    child.stderr.on('data', function(data) {
+        console.log('stderr: ' + data);
+    });
+
+    child.stdout.on('data', function(data) {
+        console.log('stdout: ' + data);
+    });
 
     mainWindow.on('closed', function () {
         mainWindow = null;
@@ -63,9 +69,18 @@ function createWindow() {
 
 app.on('ready', createWindow);
 
-app.on('window-all-closed', function() {
+app.on('window-all-closed', async () => {
+    const procs = await psList();
+
     if (process.platform !== 'darwin')
         app.quit();
+
+    procs.filter(function (proc) {
+        return proc.name === getExecNameWithExtension();
+    })
+    .forEach(item => {
+        tree_kill(item.pid);
+    });
 });
 
 app.on('before-quit', function() {

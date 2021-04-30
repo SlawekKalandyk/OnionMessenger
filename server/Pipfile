@@ -18,6 +18,8 @@ marshmallow = "*"
 flask-socketio = "*"
 pynacl = "*"
 pytest = "*"
+cffi = "*"
+eventlet = "*"
 
 [requires]
 python_version = "3.9"

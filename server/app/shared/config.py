@@ -1,5 +1,6 @@
 import os
 import platform
+import json
 
 class BaseConfiguration:
     app_local_data_directory = 'OnionMessenger'
@@ -20,6 +21,7 @@ class TorConfiguration(BaseConfiguration):
     private_key_file_name = 'private_key'
     public_key_file_name = 'public_key'
     service_id_file_name = 'service_id'
+    _tor_exec_path = None
     _private_key = None
     _public_key = None
     _service_id = None
@@ -30,7 +32,8 @@ class TorConfiguration(BaseConfiguration):
 
     @staticmethod
     def get_tor_executable_path():
-        return 'D:\\Programming\\tor-win32-0.4.4.5\\Tor\\tor.exe'
+        return f'{os.getcwd()}\\dist\\tor\\Tor\\tor.exe'
+        #return 'D:\\Programming\\tor-win32-0.4.4.5\\Tor\\tor.exe'
 
     @staticmethod
     def save_hidden_service_private_key(key: str):
